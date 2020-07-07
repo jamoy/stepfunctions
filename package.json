@@ -1,0 +1,21 @@
+{
+  "name": "stepfunctions",
+  "description": "AWS Step Functions implementation in Node, so you can run your Node.js lambda handlers in your test environments. Made to support Serverless JS testing.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
+  "dependencies": {
+    "asl-validator": "^1.7.0",
+    "dot-prop": "^5.2.0",
+    "js-yaml": "^3.14.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.4.0",
+    "jest-cli": "^26.1.0",
+    "prettier": "^2.0.5"
+  },
+  "peerDependencies": {
+    "serverless": "^1.74.1"
+  }
+}
