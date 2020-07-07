@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint --fix"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
@@ -12,18 +16,27 @@
   ],
   "dependencies": {
     "asl-validator": "^1.7.0",
-    "dot-prop": "^5.2.0",
-    "js-yaml": "^3.14.0"
+    "dot-prop": "^5.2.0"
   },
   "devDependencies": {
     "eslint": "^7.4.0",
+    "husky": "^4.2.5",
     "jest-cli": "^26.1.0",
-    "prettier": "^2.0.5"
+    "lint-staged": "^10.2.11",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1"
   },
   "peerDependencies": {
     "serverless": "^1.74.1"
   },
-  "scripts": {
-    "test": "jest"
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && pretty-quick --staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix"
+    ]
   }
 }
