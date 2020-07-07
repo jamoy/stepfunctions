@@ -4,7 +4,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "files": [
+    "lib"
+  ],
   "dependencies": {
     "asl-validator": "^1.7.0",
     "dot-prop": "^5.2.0",
@@ -17,5 +22,8 @@
   },
   "peerDependencies": {
     "serverless": "^1.74.1"
+  },
+  "scripts": {
+    "test": "jest"
   }
 }

@@ -15,7 +15,7 @@ If you are:
 - using Node, Lambda, AWS Step Functions
 - using Serverless
 - writing Integration tests with AWS Step Functions
-- see how the statemachine runs before creating it in AWS
+- trying to see how the statemachine runs before creating it in AWS
 
 ### License
 
