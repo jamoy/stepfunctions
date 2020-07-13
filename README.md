@@ -1,5 +1,7 @@
 # stepfunctions
 
+![Stepfunctions](https://github.com/jamoy/stepfunctions/workflows/Stepfunctions/badge.svg)
+
 AWS Step Functions implementation in Node, so you can run your Node.js lambda handlers in your test environments. Made to support Serverless JS testing.
 
 ## Installation
@@ -46,7 +48,7 @@ const sm = new Sfn({
 describe('StateMachine Test', () => {
   it('Check if a task was run', async () => {
     const mockfn = jest.fn((input) => input.test === 1);
-    sm.bindResolver('Test', mockfn);
+    sm.bindTaskResource('Test', mockfn);
     await sm.startExecution({ test: 1 });
     expect(mockfn).toHaveBeenCalled();
   });
@@ -54,6 +56,14 @@ describe('StateMachine Test', () => {
 ```
 
 You can see more examples in the test file at `/test/stepfunctions.test.js`.
+
+## API
+
+### 1. startExecution
+
+### 2. bindTaskResource
+
+### 3. getExecutionResult
 
 ## Supported States
 
@@ -83,6 +93,7 @@ More information on the spec above https://states-language.net/spec.html
 
 ## Future
 
+- [ ] Change arn in bindTaskResource instead of the State name
 - [ ] Run `sls invoke local` instead of binding resolvers
 - [ ] More accurate timing mechanism
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`

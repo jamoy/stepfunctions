@@ -1,7 +1,5 @@
 const Sfn = require('../lib/stepfunctions');
 
-describe('StateMachine Test', () => {});
-
 describe('StateMachine', () => {
   it('validates states definition', async () => {
     expect(() => new Sfn({ statemachine: { willThrow: false } })).toThrow(
@@ -10,31 +8,23 @@ describe('StateMachine', () => {
   });
 
   it('Check if a task was run', async () => {
-    const sm = new Sfn({
-      statemachine: {
-        StartAt: 'Test',
-        States: {
-          Test: {
-            Type: 'Task',
-            Resource:
-              'arn:aws:lambda:ap-southeast-1:123456789012:function:test',
-            End: true,
-          },
-        },
-      },
-    });
+    const sm = new Sfn({ statemachine: require('./steps/simple.json') });
     const mockfn = jest.fn((input) => input.test === 1);
-    const spy = jest.spyOn(sm, 'step');
-    sm.bindResolver('Test', mockfn);
+    const spy = jest.spyOn(sm, '_step');
+    sm.bindTaskResource('Test', mockfn);
     await sm.startExecution({ test: 1 });
     expect(mockfn).toHaveBeenCalled();
     expect(spy).toHaveBeenCalled();
-    // expect(sm.getExecutionResult()).toBe(true)
+    expect(sm.getExecutionResult()).toBe(true);
   });
+
+  it('can get the execution result', () => {});
 
   describe('supports Task', () => {});
 
-  describe('supports Map', () => {});
+  describe('supports Map', () => {
+    it('supports ItemsPath', () => {});
+  });
 
   describe('supports Parallel', () => {});
 
@@ -51,4 +41,12 @@ describe('StateMachine', () => {
   describe('supports Retry', () => {});
 
   describe('supports Catch', () => {});
+
+  describe('supports Parameters', () => {});
+
+  describe('supports InputPath', () => {});
+
+  describe('supports ResultPath', () => {});
+
+  describe('supports OutputPath', () => {});
 });
