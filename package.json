@@ -8,6 +8,10 @@
     "test": "jest",
     "lint": "eslint --fix"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jamoy/stepfunctions.git"
+  },
   "files": [
     "lib",
     "LICENSE",
