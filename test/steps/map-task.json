@@ -1,6 +1,11 @@
 {
-  "StartAt": "Map",
+  "StartAt": "Test",
   "States": {
+    "Test": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Map"
+    },
     "Map": {
       "Type": "Map",
       "Iterator": {
@@ -13,11 +18,6 @@
           }
         }
       },
-      "Next": "Test"
-    },
-    "Test": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "End": true
     }
   }

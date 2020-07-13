@@ -62,20 +62,81 @@ describe('Stepfunctions', () => {
       expect(mockfn).toHaveBeenCalled();
       expect(sm.getExecutionResult()).toBe(7);
     });
-
-    // it('replicates a lambda call', async () => {
-    //   const sm = new Sfn({ StateMachine: require('./steps/task.json') });
-    //   const mockfn = jest.fn((input) => input.test === 1);
-    //   sm.bindTaskResource('Test', mockfn);
-    //   const mockSpy = jest.fn();
-    //   await sm.startExecution({ test: 1 });
-    //   sm.on('LambdaFunctionStarted', mockSpy);
-    //   expect(mockSpy).toHaveBeenCalled();
-    // });
   });
 
   describe('Map', () => {
-    it('supports ItemsPath', () => {});
+    it('starts with a simple Map', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/map.json') });
+      const mockfn = jest.fn((input) => input);
+      const mockMapfn = jest.fn((input) => ({ test: input.test + 1 }));
+      sm.bindTaskResource('Test', mockfn);
+      sm.bindTaskResource('Mapper', mockMapfn);
+      await sm.startExecution([{ test: 1 }, { test: 2 }]);
+      expect(mockfn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([{ test: 2 }]),
+      );
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([{ test: 3 }]),
+      );
+    });
+
+    it('aggregates from a Task to a Map', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/map-task.json') });
+      const mockfn = jest.fn((input) => input);
+      const mockMapfn = jest.fn((input) => ({ test: input.test + 1 }));
+      sm.bindTaskResource('Mapper', mockMapfn);
+      sm.bindTaskResource('Test', mockfn);
+      await sm.startExecution([{ test: 1 }, { test: 2 }]);
+      expect(mockfn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([{ test: 2 }]),
+      );
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([{ test: 3 }]),
+      );
+    });
+
+    it('supports nested Map', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/map-nested.json') });
+      const mockfn = jest.fn((input) => input);
+      const mockMapfn = jest.fn((input) => [
+        { test: input.test + 1 },
+        { test: input.test + 2 },
+      ]);
+      const mockMapdfn = jest.fn((input) => ({ test: input.test + 1 }));
+      const mockLastfn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockfn);
+      sm.bindTaskResource('Mapper', mockMapfn);
+      sm.bindTaskResource('Mapped', mockMapdfn);
+      sm.bindTaskResource('Last', mockLastfn);
+      await sm.startExecution([{ test: 1 }, { test: 2 }]);
+      expect(mockfn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([[{ test: 3 }, { test: 4 }]]),
+      );
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([[{ test: 4 }, { test: 5 }]]),
+      );
+    });
+
+    it('supports ItemsPath', async () => {
+      const definition = require('./steps/map.json');
+      definition.States.Map.ItemsPath = '$.items';
+      const sm = new Sfn({ StateMachine: definition });
+      const mockfn = jest.fn((input) => input);
+      const mockMapfn = jest.fn((input) => ({ test: input.test + 1 }));
+      sm.bindTaskResource('Test', mockfn);
+      sm.bindTaskResource('Mapper', mockMapfn);
+      await sm.startExecution({ items: [{ test: 1 }, { test: 2 }] });
+      expect(mockfn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([{ test: 2 }]),
+      );
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([{ test: 3 }]),
+      );
+    });
   });
 
   describe('Parallel', () => {});
@@ -103,12 +164,12 @@ describe('Stepfunctions', () => {
   describe('Catch', () => {});
 
   describe('Input and Output', () => {
-    it('can modify input with Parameters', () => {});
+    it.skip('can modify input with Parameters', () => {});
 
-    it('can modify input with InputPath', () => {});
+    it.skip('can modify input with InputPath', () => {});
 
-    it('can modify output with ResultPath', () => {});
+    it.skip('can modify output with ResultPath', () => {});
 
-    it('can modify output OutputPath', () => {});
+    it.skip('can modify output OutputPath', () => {});
   });
 });

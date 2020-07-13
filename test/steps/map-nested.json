@@ -1,0 +1,43 @@
+{
+  "StartAt": "Test",
+  "States": {
+    "Test": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Map"
+    },
+    "Map": {
+      "Type": "Map",
+      "Iterator": {
+        "StartAt": "Mapper",
+        "States": {
+          "Mapper": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+            "Next": "MapperLast"
+          },
+          "MapperLast": {
+            "Type": "Map",
+            "Iterator": {
+              "StartAt": "Mapped",
+              "States": {
+                "Mapped": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+                  "End": true
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "Next": "Last"
+    },
+    "Last": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}
