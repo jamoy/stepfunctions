@@ -1,4 +1,4 @@
-const StateMachine = require('../lib/statemachine');
+const StateMachine = require('../lib/sf');
 
 describe('StateMachine', () => {
   it('validates states definition', async () => {
