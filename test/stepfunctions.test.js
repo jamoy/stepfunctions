@@ -1,19 +1,20 @@
-const StateMachine = require('../lib/sf');
+const Sfn = require('../lib/stepfunctions');
+
+describe('StateMachine Test', () => {});
 
 describe('StateMachine', () => {
   it('validates states definition', async () => {
-    expect(() => new StateMachine({ statemachine: { test } })).toThrow(
+    expect(() => new Sfn({ statemachine: { willThrow: false } })).toThrow(
       'data should NOT have additional properties',
     );
   });
 
-  it('can run steps successfully', async () => {
-    const mocked = jest.fn(() => 1);
-    const sm = new StateMachine({
+  it('Check if a task was run', async () => {
+    const sm = new Sfn({
       statemachine: {
-        StartAt: 'test',
+        StartAt: 'Test',
         States: {
-          test: {
+          Test: {
             Type: 'Task',
             Resource:
               'arn:aws:lambda:ap-southeast-1:123456789012:function:test',
@@ -21,25 +22,29 @@ describe('StateMachine', () => {
           },
         },
       },
-      resolvers: {
-        test: mocked,
-      },
     });
+    const mockfn = jest.fn((input) => input.test === 1);
     const spy = jest.spyOn(sm, 'step');
-    await sm.startExecution({ nothing: true });
+    sm.bindResolver('Test', mockfn);
+    await sm.startExecution({ test: 1 });
+    expect(mockfn).toHaveBeenCalled();
     expect(spy).toHaveBeenCalled();
-    expect(mocked.mock.calls.length).toBe(1);
+    // expect(sm.getExecutionResult()).toBe(true)
   });
 
-  describe('supports Lambda Tasks', () => {});
-
-  describe('supports Tasks', () => {});
+  describe('supports Task', () => {});
 
   describe('supports Map', () => {});
 
   describe('supports Parallel', () => {});
 
   describe('supports Pass', () => {});
+
+  describe('supports Fail', () => {});
+
+  describe('supports Succeed', () => {});
+
+  describe('supports Wait', () => {});
 
   describe('supports Choice', () => {});
 

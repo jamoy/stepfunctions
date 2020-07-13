@@ -36,7 +36,7 @@ const sm = new Sfn({
     States: {
       Test: {
         Type: 'Task',
-        Resource: 'arn:lambda',
+        Resource: 'arn:aws:lambda:ap-southeast-1:123456789012:function:test',
         End: true,
       },
     },
@@ -49,10 +49,11 @@ describe('StateMachine Test', () => {
     sm.bindResolver('Test', mockfn);
     await sm.startExecution({ test: 1 });
     expect(mockfn).toHaveBeenCalled();
-    expect(mockfn).toHaveBeenCalled();
   });
 });
 ```
+
+You can see more examples in the test file at `/test/stepfunctions.test.js`.
 
 ## Supported States
 
@@ -80,7 +81,7 @@ and input and output processing via:
 
 More information on the spec above https://states-language.net/spec.html
 
-## Roadmap
+## Future
 
 - [ ] Run `sls invoke local` instead of binding resolvers
 - [ ] More accurate timing mechanism
