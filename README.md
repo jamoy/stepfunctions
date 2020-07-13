@@ -33,7 +33,7 @@ Include it in your test files, tested with Jest so far.
 const Sfn = require('stepfunctions');
 
 const sm = new Sfn({
-  statemachine: {
+  StateMachine: {
     StartAt: 'Test',
     States: {
       Test: {

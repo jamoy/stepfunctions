@@ -1,0 +1,20 @@
+{
+  "StartAt": "Test",
+  "States": {
+    "Test": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Test1"
+    },
+    "Test1": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Test2"
+    },
+    "Test2": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}

@@ -1,6 +1,10 @@
 {
-  "StartAt": "Test",
+  "StartAt": "Pass",
   "States": {
+    "Pass": {
+      "Type": "Pass",
+      "Next": "Test"
+    },
     "Test": {
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
