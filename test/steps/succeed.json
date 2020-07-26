@@ -4,7 +4,28 @@
     "Test": {
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
-      "End": true
+      "Next": "Choice"
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.value",
+          "NumericEquals": 0,
+          "Next": "Succeed"
+        },
+        {
+          "Variable": "$.value",
+          "NumericGreaterThan": 0,
+          "Next": "Fail"
+        }
+      ]
+    },
+    "Succeed": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
     }
   }
 }

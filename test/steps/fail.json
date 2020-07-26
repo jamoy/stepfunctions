@@ -1,10 +1,8 @@
 {
-  "StartAt": "Test",
+  "StartAt": "Fail",
   "States": {
-    "Test": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
-      "End": true
+    "Fail": {
+      "Type": "Fail"
     }
   }
 }

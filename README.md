@@ -61,6 +61,15 @@ You can see more examples in the test file at `/test/stepfunctions.test.js`.
 
 ### 1. startExecution
 
+```
+sm.startExecution(stateMachineDefinition, {
+  respectTime: true,
+});
+```
+
+- respectTime - defaults to false, will ensure that the time used in Wait steps will be respected and not use the maximum
+  wait time in the library.
+
 ### 2. bindTaskResource
 
 ### 3. getExecutionResult
@@ -71,14 +80,14 @@ The following states are supported by this library:
 
 - [x] Task
 - [x] Map
-- [x] Choice
+- [ ] Choice
 - [ ] Parallel
 - [ ] Retry
 - [ ] Catch
 - [x] Pass
-- [ ] Succeed
-- [ ] Fail
-- [ ] Wait
+- [x] Succeed
+- [x] Fail
+- [x] Wait
 
 and input and output processing via:
 
@@ -89,13 +98,44 @@ and input and output processing via:
 - [ ] DefaultPath
 - [ ] ResultPath
 
+and choice support:
+
+- [x] DefaultState
+- [ ] And
+- [ ] BooleanEquals
+- [ ] Not
+- [x] NumericEquals
+- [x] NumericGreaterThan
+- [ ] NumericGreaterThanEquals
+- [ ] NumericLessThan
+- [ ] NumericLessThanEquals
+- [ ] Or
+- [x] StringEquals
+- [ ] StringGreaterThan
+- [ ] StringGreaterThanEquals
+- [ ] StringLessThan
+- [ ] StringLessThanEquals
+- [ ] TimestampEquals
+- [ ] TimestampGreaterThan
+- [ ] TimestampGreaterThanEquals
+- [ ] TimestampLessThan
+- [ ] TimestampLessThanEquals
+
 More information on the spec above https://states-language.net/spec.html
 
+## Caveats
+
+1. `Wait` will wait for at most 30 seconds. This is because it's expected that this library
+   will be used within a testing context. You can override this behaviour by adding the `respectTime` option to true in the `startExecution` method.
+
 ## Future
+
+PR's are welcome to help finish the ones below :)
 
 - [ ] Change arn in bindTaskResource instead of the State name
 - [ ] Run `sls invoke local` instead of binding resolvers
 - [ ] More accurate timing mechanism
+- [ ] use `jest.fakeTimers()` in the test
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`
 
 ## License

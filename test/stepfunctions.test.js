@@ -151,11 +151,85 @@ describe('Stepfunctions', () => {
     });
   });
 
-  describe('Fail', () => {});
+  describe('Fail', () => {
+    it('throws a full stop and an error when a fail state is encountered', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/fail.json') });
+      const mockFn = jest.fn();
+      sm.on('FailStateEntered', mockFn);
+      await expect(sm.startExecution()).rejects.toThrowError(
+        /Transitioned to a FAIL state for Fail/,
+      );
+      expect(mockFn).toHaveBeenCalled();
+    });
+  });
 
-  describe('Succeed', () => {});
+  describe('Succeed', () => {
+    it('stops the statemachine after receiving a succeeding option', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/succeed.json') });
+      const succeedingFn = jest.fn(() => ({ value: 0 }));
+      const mockFn = jest.fn();
+      sm.bindTaskResource('Test', succeedingFn);
+      sm.on('SucceedStateEntered', mockFn);
+      await sm.startExecution();
+      expect(mockFn).toHaveBeenCalled();
+      expect(succeedingFn).toHaveBeenCalled();
+    });
 
-  describe('Wait', () => {});
+    it('fails the statemachine after receiving a failing option', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/succeed.json') });
+      const succeedingFn = jest.fn(() => ({ value: 1 }));
+      const mockFn = jest.fn();
+      sm.bindTaskResource('Test', succeedingFn);
+      sm.on('FailStateEntered', mockFn);
+      await expect(sm.startExecution()).rejects.toThrowError(
+        /Transitioned to a FAIL state for Fail/,
+      );
+      expect(mockFn).toHaveBeenCalled();
+      expect(succeedingFn).toHaveBeenCalled();
+    });
+  });
+
+  // TODO: maybe use faketimers
+  describe('Wait', () => {
+    it('can wait for 1 second', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
+      const mockFn = jest.fn();
+      sm.bindTaskResource('Final', mockFn);
+      await sm.startExecution({ value: 'Wait' });
+      expect(mockFn).toHaveBeenCalled();
+    }, 1500);
+
+    it('can wait for 1 second using SecondsPath', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
+      const mockFn = jest.fn();
+      sm.bindTaskResource('Final', mockFn);
+      await sm.startExecution({ value: 'WaitPath', until: 1 });
+      expect(mockFn).toHaveBeenCalled();
+    }, 1500);
+
+    it('can wait until a specified time', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
+      const mockFn = jest.fn();
+      sm.bindTaskResource('Final', mockFn);
+      await sm.startExecution({ value: 'WaitUntil' });
+      expect(mockFn).toHaveBeenCalled();
+    });
+
+    it('can wait until a specified time using TimestampPath', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
+      const mockFn = jest.fn();
+      sm.bindTaskResource('Final', mockFn);
+      // 3 seconds in the future
+      const date = new Date();
+      await sm.startExecution({
+        value: 'WaitUntilPath',
+        until: date.setSeconds(date.getSeconds() + 1),
+      });
+      expect(mockFn).toHaveBeenCalled();
+    }, 1500);
+
+    it.skip('can abort a running statemachine', () => {});
+  });
 
   describe('Choice', () => {});
 

@@ -1,0 +1,55 @@
+{
+  "StartAt": "Choice",
+  "States": {
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.value",
+          "StringEquals": "Wait",
+          "Next": "Wait"
+        },
+        {
+          "Variable": "$.value",
+          "StringEquals": "WaitPath",
+          "Next": "WaitPath"
+        },
+        {
+          "Variable": "$.value",
+          "StringEquals": "WaitUntil",
+          "Next": "WaitUntil"
+        },
+        {
+          "Variable": "$.value",
+          "StringEquals": "WaitUntilPath",
+          "Next": "WaitUntilPath"
+        }
+      ]
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 1,
+      "Next": "Final"
+    },
+    "WaitPath": {
+      "Type": "Wait",
+      "SecondsPath": "$.until",
+      "Next": "Final"
+    },
+    "WaitUntil": {
+      "Type": "Wait",
+      "Timestamp": "2016-03-14T01:59:00Z",
+      "Next": "Final"
+    },
+    "WaitUntilPath": {
+      "Type": "Wait",
+      "TimestampPath": "$.until",
+      "Next": "Final"
+    },
+    "Final": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}
