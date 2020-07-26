@@ -1,4 +1,5 @@
 module.exports = {
   clearMocks: true,
-  testEnvironment: "node"
+  collectCoverage: true,
+  testEnvironment: 'node',
 };

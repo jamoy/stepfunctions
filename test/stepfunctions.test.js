@@ -229,6 +229,8 @@ describe('Stepfunctions', () => {
     }, 1500);
 
     it.skip('can abort a running statemachine', () => {});
+
+    it.skip('can expect a timeout when a wait step is running for a long time', () => {});
   });
 
   describe('Choice', () => {});

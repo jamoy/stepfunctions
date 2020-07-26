@@ -67,8 +67,9 @@ sm.startExecution(stateMachineDefinition, {
 });
 ```
 
-- respectTime - defaults to false, will ensure that the time used in Wait steps will be respected and not use the maximum
-  wait time in the library.
+- respectTime - will ensure that the time used in Wait steps will be respected and not use the maximum
+  wait time in the library. defaults to false.
+- maxWaitTime - the maximum amount of time a wait step can function. defaults to 30s.
 
 ### 2. bindTaskResource
 
