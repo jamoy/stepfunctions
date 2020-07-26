@@ -4,10 +4,6 @@
   "version": "0.0.3",
   "main": "index.js",
   "license": "MIT",
-  "scripts": {
-    "test": "jest",
-    "lint": "eslint --fix"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/jamoy/stepfunctions.git"
@@ -18,11 +14,16 @@
     "index.js",
     "package.json"
   ],
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint --fix"
+  },
   "dependencies": {
     "asl-validator": "^1.7.0",
     "dot-prop": "^5.2.0"
   },
   "devDependencies": {
+    "codecov": "^3.7.2",
     "eslint": "^7.4.0",
     "husky": "^4.2.5",
     "jest-cli": "^26.1.0",
