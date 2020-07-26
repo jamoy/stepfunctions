@@ -137,9 +137,49 @@ describe('Stepfunctions', () => {
         expect.arrayContaining([{ test: 3 }]),
       );
     });
+
+    it.skip('can run sequential tasks while limiting concurrency using MaxConcurrency', async () => {});
   });
 
-  describe('Parallel', () => {});
+  describe('Parallel', () => {
+    it('can run multiple tasks at once', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/parallel.json') });
+      const mock1Fn = jest.fn((input) => input[0] + input[1]);
+      const mock2Fn = jest.fn((input) => input[0] - input[1]);
+      sm.bindTaskResource('ParallelTask1', mock1Fn);
+      sm.bindTaskResource('ParallelTask2', mock2Fn);
+      await sm.startExecution([1, 1]);
+      expect(mock1Fn).toHaveBeenCalled();
+      expect(mock2Fn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(expect.arrayContaining([2, 0]));
+    });
+
+    it('can run nested parallels', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/parallel-nested.json'),
+      });
+      const mock1Fn = jest.fn((input) => input[0] + input[1]);
+      const mock2Fn = jest.fn((input) => input[0] + input[1]);
+      const mock3Fn = jest.fn((input) => input + 1);
+      const mock4Fn = jest.fn((input) => input + 2);
+      sm.bindTaskResource('ParallelTask1', mock1Fn);
+      sm.bindTaskResource('ParallelTask2', mock2Fn);
+      sm.bindTaskResource('ParallelTask3', mock3Fn);
+      sm.bindTaskResource('ParallelTask4', mock4Fn);
+      await sm.startExecution([1, 1]);
+      expect(mock1Fn).toHaveBeenCalled();
+      expect(mock2Fn).toHaveBeenCalled();
+      expect(mock3Fn).toHaveBeenCalled();
+      expect(mock4Fn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([[3, 4], 2]),
+      );
+    });
+
+    it.skip('can run multiple tasks and aggregate the results into ResultPath', async () => {});
+
+    it.skip('can run multiple tasks that respects maxConcurrency', async () => {});
+  });
 
   describe('Pass', () => {
     it('can continue to another task via Pass', async () => {
@@ -189,7 +229,7 @@ describe('Stepfunctions', () => {
     });
   });
 
-  // TODO: maybe use faketimers
+  // TODO: maybe use jest.fakeTimers
   describe('Wait', () => {
     it('can wait for 1 second', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
@@ -219,14 +259,14 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
       const mockFn = jest.fn();
       sm.bindTaskResource('Final', mockFn);
-      // 3 seconds in the future
+      // 1 second in the future
       const date = new Date();
       await sm.startExecution({
         value: 'WaitUntilPath',
         until: date.setSeconds(date.getSeconds() + 1),
       });
       expect(mockFn).toHaveBeenCalled();
-    }, 1500);
+    }, 2000);
 
     it.skip('can abort a running statemachine', () => {});
 

@@ -64,13 +64,16 @@ You can see more examples in the test file at `/test/stepfunctions.test.js`.
 
 ```
 sm.startExecution(stateMachineDefinition, {
-  respectTime: true,
+  respectTime: false,
+  maxWaitTime: 30,
+  maxConcurrency: 10,
 });
 ```
 
 - respectTime - will ensure that the time used in Wait steps will be respected and not use the maximum
   wait time in the library. defaults to false.
 - maxWaitTime - the maximum amount of time a wait step can function. defaults to 30s.
+- maxConcurrency - allows the amount of parallel tasks to be ran concurrently. defaults to 10.
 
 ### 2. bindTaskResource
 
@@ -83,7 +86,7 @@ The following states are supported by this library:
 - [x] Task
 - [x] Map
 - [ ] Choice
-- [ ] Parallel
+- [x] Parallel
 - [ ] Retry
 - [ ] Catch
 - [x] Pass
@@ -102,26 +105,26 @@ and input and output processing via:
 
 and choice support:
 
-- [x] DefaultState
 - [ ] And
-- [ ] BooleanEquals
 - [ ] Not
+- [ ] Or
+- [x] DefaultState
+- [x] BooleanEquals
 - [x] NumericEquals
 - [x] NumericGreaterThan
-- [ ] NumericGreaterThanEquals
-- [ ] NumericLessThan
-- [ ] NumericLessThanEquals
-- [ ] Or
+- [x] NumericGreaterThanEquals
+- [x] NumericLessThan
+- [x] NumericLessThanEquals
 - [x] StringEquals
-- [ ] StringGreaterThan
-- [ ] StringGreaterThanEquals
-- [ ] StringLessThan
-- [ ] StringLessThanEquals
-- [ ] TimestampEquals
-- [ ] TimestampGreaterThan
-- [ ] TimestampGreaterThanEquals
-- [ ] TimestampLessThan
-- [ ] TimestampLessThanEquals
+- [x] StringGreaterThan
+- [x] StringGreaterThanEquals
+- [x] StringLessThan
+- [x] StringLessThanEquals
+- [x] TimestampEquals
+- [x] TimestampGreaterThan
+- [x] TimestampGreaterThanEquals
+- [x] TimestampLessThan
+- [x] TimestampLessThanEquals
 
 More information on the spec above https://states-language.net/spec.html
 

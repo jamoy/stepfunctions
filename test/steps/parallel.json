@@ -1,0 +1,36 @@
+{
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "ParallelTask1",
+          "States": {
+            "ParallelTask1": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ParallelTask2",
+          "States": {
+            "ParallelTask2": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Aggregate"
+    },
+    "Aggregate": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}
