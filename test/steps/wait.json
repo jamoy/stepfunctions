@@ -24,7 +24,8 @@
           "StringEquals": "WaitUntilPath",
           "Next": "WaitUntilPath"
         }
-      ]
+      ],
+      "Default": "Fail"
     },
     "Wait": {
       "Type": "Wait",
@@ -50,6 +51,9 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "End": true
+    },
+    "Fail": {
+      "Type": "Fail"
     }
   }
 }

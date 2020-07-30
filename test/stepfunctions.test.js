@@ -197,7 +197,7 @@ describe('Stepfunctions', () => {
       const mockFn = jest.fn();
       sm.on('FailStateEntered', mockFn);
       await expect(sm.startExecution()).rejects.toThrowError(
-        /Transitioned to a FAIL state for Fail/,
+        /Transitioned to a FAIL state/,
       );
       expect(mockFn).toHaveBeenCalled();
     });
@@ -222,7 +222,7 @@ describe('Stepfunctions', () => {
       sm.bindTaskResource('Test', succeedingFn);
       sm.on('FailStateEntered', mockFn);
       await expect(sm.startExecution()).rejects.toThrowError(
-        /Transitioned to a FAIL state for Fail/,
+        /Transitioned to a FAIL state/,
       );
       expect(mockFn).toHaveBeenCalled();
       expect(succeedingFn).toHaveBeenCalled();
@@ -273,7 +273,98 @@ describe('Stepfunctions', () => {
     it.skip('can expect a timeout when a wait step is running for a long time', () => {});
   });
 
-  describe('Choice', () => {});
+  describe('Choice', () => {
+    it('can test against boolean', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: true });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: true }),
+      );
+    });
+
+    it('can test equality against numbers', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 0 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 0 }),
+      );
+    });
+
+    it('can test equality against strings', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 'test' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 'test' }),
+      );
+    });
+
+    it('can test equality against timestamps', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: '2001-01-01T12:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: '2001-01-01T12:00:00Z' }),
+      );
+    });
+
+    // it('can test greater than against numbers', async () => {
+    //   const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+    //   const mockFn = jest.fn(input => input);
+    //   sm.bindTaskResource('Test', mockFn)
+    //   await sm.startExecution({ param1: 1 });
+    //   expect(mockFn).toHaveBeenCalled();
+    //   expect(sm.getExecutionResult()).toEqual(expect.objectContaining({"param1": 1}));
+    // });
+    //
+    // it('can test greater than against strings', async () => {
+    //   const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+    //   const mockFn = jest.fn(input => input);
+    //   sm.bindTaskResource('Test', mockFn)
+    //   await sm.startExecution({ param1: "tester" });
+    //   expect(mockFn).toHaveBeenCalled();
+    //   expect(sm.getExecutionResult()).toEqual(expect.objectContaining({"param1": "tester"}));
+    // });
+
+    // it('can test greater than against timestamps', async () => {
+    //   const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+    //   const mockFn = jest.fn(input => input);
+    //   sm.bindTaskResource('Test', mockFn)
+    //   await sm.startExecution({ param1: "2001-02-01T12:00:00Z" });
+    //   expect(mockFn).toHaveBeenCalled();
+    //   expect(sm.getExecutionResult()).toEqual(expect.objectContaining({"param1": "2001-02-01T12:00:00Z"}));
+    // });
+
+    // test NumericGreaterThanEquals
+    // test StringGreaterThanEquals
+    // test TimestampGreaterThanEquals
+
+    // test NumericLessThan
+    // test StringLessThan
+    // test TimestampLessThan
+
+    // test NumericLessThanEquals
+    // test StringLessThanEquals
+    // test TimestampLessThanEquals
+
+    // test And
+    // test Not
+    // test Or
+
+    // test Nested And
+    // test Nested Or
+    // test Nested Not
+  });
 
   describe('Retry', () => {});
 

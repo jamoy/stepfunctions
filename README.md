@@ -85,7 +85,7 @@ The following states are supported by this library:
 
 - [x] Task
 - [x] Map
-- [ ] Choice
+- [x] Choice
 - [x] Parallel
 - [ ] Retry
 - [ ] Catch
@@ -105,9 +105,9 @@ and input and output processing via:
 
 and choice support:
 
-- [ ] And
-- [ ] Not
-- [ ] Or
+- [x] And
+- [x] Not
+- [x] Or
 - [x] DefaultState
 - [x] BooleanEquals
 - [x] NumericEquals

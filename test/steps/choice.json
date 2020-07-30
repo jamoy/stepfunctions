@@ -1,0 +1,149 @@
+{
+  "StartAt": "Choices",
+  "States": {
+    "Choices": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.param1",
+          "BooleanEquals": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "NumericEquals": 0,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "StringEquals": "test",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "TimestampEquals": "2001-01-01T12:00:00Z",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "NumericGreaterThan": 0,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "StringGreaterThan": "test",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "TimestampGreaterThan": "2001-01-01T12:00:00Z",
+          "Next": "Test"
+        },
+
+        {
+          "And": [
+            {
+              "Variable": "$.param1",
+              "NumericEquals": 1
+            },
+            {
+              "Variable": "$.param2",
+              "NumericEquals": 2
+            }
+          ],
+          "Next": "Succeed"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.param1",
+              "NumericEquals": 1
+            },
+            {
+              "Not": {
+                "Variable": "$.param2",
+                "NumericEquals": 2
+              }
+            }
+          ],
+          "Next": "Succeed"
+        },
+        {
+          "And": [
+            {
+              "And": [
+                {
+                  "Variable": "$.param3",
+                  "NumericEquals": 1
+                },
+                {
+                  "Not": {
+                    "Variable": "$.param1",
+                    "NumericEquals": 1
+                  }
+                }
+              ]
+            },
+            {
+              "Not": {
+                "Variable": "$.param2",
+                "NumericEquals": 1
+              }
+            }
+          ],
+          "Next": "Succeed"
+        },
+        {
+          "And": [
+            {
+              "Or": [
+                {
+                  "Variable": "$.param1",
+                  "NumericGreaterThan": 10
+                },
+                {
+                  "And": [
+                    {
+                      "Variable": "$.param2",
+                      "NumericEquals": 0
+                    },
+                    {
+                      "Not": {
+                        "Variable": "$.param3",
+                        "NumericEquals": 5
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Not": {
+                "Variable": "$.param4",
+                "NumericEquals": 0
+              }
+            }
+          ],
+          "Next": "Succeed"
+        },
+        {
+          "Variable": "$.param1",
+          "BooleanEquals": true,
+          "Next": "Succeed"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Test": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    },
+    "Succeed": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}
