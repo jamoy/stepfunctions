@@ -26,27 +26,7 @@
         },
         {
           "Variable": "$.param1",
-          "NumericGreaterThan": 0,
-          "Next": "Test"
-        },
-        {
-          "Variable": "$.param1",
-          "StringGreaterThan": "test",
-          "Next": "Test"
-        },
-        {
-          "Variable": "$.param1",
-          "TimestampGreaterThan": "2001-01-01T12:00:00Z",
-          "Next": "Test"
-        },
-        {
-          "Variable": "$.param1",
           "NumericGreaterThanEquals": 10,
-          "Next": "Test"
-        },
-        {
-          "Variable": "$.param1",
-          "StringGreaterThanEquals": "tester",
           "Next": "Test"
         },
         {
@@ -55,18 +35,8 @@
           "Next": "Test"
         },
         {
-          "Variable": "$.param2",
-          "NumericLessThan": 0,
-          "Next": "Test"
-        },
-        {
-          "Variable": "$.param2",
-          "StringLessThan": "test",
-          "Next": "Test"
-        },
-        {
-          "Variable": "$.param2",
-          "TimestampLessThan": "2001-01-01T12:00:00Z",
+          "Variable": "$.param1",
+          "StringGreaterThanEquals": "tester",
           "Next": "Test"
         },
         {
@@ -82,6 +52,36 @@
         {
           "Variable": "$.param2",
           "TimestampLessThanEquals": "2001-02-01T12:00:00Z",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "NumericGreaterThan": 0,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param4",
+          "StringGreaterThan": "test",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param1",
+          "TimestampGreaterThan": "2001-01-01T12:00:00Z",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param3",
+          "NumericLessThan": 0,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param3",
+          "StringLessThan": "test",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.param3",
+          "TimestampLessThan": "2001-01-01T12:00:00Z",
           "Next": "Test"
         },
         {

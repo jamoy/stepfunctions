@@ -333,10 +333,10 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
       const mockFn = jest.fn((input) => input);
       sm.bindTaskResource('Test', mockFn);
-      await sm.startExecution({ param1: 'tester' });
+      await sm.startExecution({ param4: 'tester' });
       expect(mockFn).toHaveBeenCalled();
       expect(sm.getExecutionResult()).toEqual(
-        expect.objectContaining({ param1: 'tester' }),
+        expect.objectContaining({ param4: 'tester' }),
       );
     });
 
@@ -403,10 +403,10 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
       const mockFn = jest.fn((input) => input);
       sm.bindTaskResource('Test', mockFn);
-      await sm.startExecution({ param2: -1 });
+      await sm.startExecution({ param3: -1 });
       expect(mockFn).toHaveBeenCalled();
       expect(sm.getExecutionResult()).toEqual(
-        expect.objectContaining({ param2: -1 }),
+        expect.objectContaining({ param3: -1 }),
       );
     });
 
@@ -414,10 +414,10 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
       const mockFn = jest.fn((input) => input);
       sm.bindTaskResource('Test', mockFn);
-      await sm.startExecution({ param2: 'tes' });
+      await sm.startExecution({ param3: 'tes' });
       expect(mockFn).toHaveBeenCalled();
       expect(sm.getExecutionResult()).toEqual(
-        expect.objectContaining({ param2: 'tes' }),
+        expect.objectContaining({ param3: 'tes' }),
       );
     });
 
@@ -425,10 +425,10 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
       const mockFn = jest.fn((input) => input);
       sm.bindTaskResource('Test', mockFn);
-      await sm.startExecution({ param2: '2001-01-01T11:00:00Z' });
+      await sm.startExecution({ param3: '2001-01-01T11:00:00Z' });
       expect(mockFn).toHaveBeenCalled();
       expect(sm.getExecutionResult()).toEqual(
-        expect.objectContaining({ param2: '2001-01-01T11:00:00Z' }),
+        expect.objectContaining({ param3: '2001-01-01T11:00:00Z' }),
       );
     });
 
