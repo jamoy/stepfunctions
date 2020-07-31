@@ -8,7 +8,13 @@ AWS Step Functions implementation in Node, so you can run your Node.js lambda ha
 ## Installation
 
 ```
-npm install --save-dev stepfunctions
+npm i -D stepfunctions
+```
+
+or if you're using yarn like me:
+
+```
+yarn add -D stepfunctions
 ```
 
 ## Motivation
@@ -114,10 +120,10 @@ and input and output processing via:
 
 - [x] InputPath
 - [x] ItemsPath
-- [ ] Parameters
-- [ ] OutputPath
-- [ ] DefaultPath
-- [ ] ResultPath
+- [x] Parameters
+- [x] OutputPath
+- [x] ResultPath
+- [x] Context
 
 and choice support:
 
@@ -153,6 +159,7 @@ More information on the spec above https://states-language.net/spec.html
 
 PR's are welcome to help finish the ones below :)
 
+- [ ] Better error handling and messages
 - [ ] Change arn in bindTaskResource instead of the State name
 - [ ] Run `sls invoke local` instead of binding resolvers
 - [ ] More accurate timing mechanism

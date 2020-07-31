@@ -32,6 +32,79 @@ describe('Stepfunctions', () => {
     expect(sm.getExecutionResult()).toBe(false);
   });
 
+  it('can modify input with InputPath and Parameters', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/input.json') });
+    const mockfn = jest.fn((input) => ({
+      comment: 'Example for Parameters.',
+      product: {
+        details: {
+          color: 'blue',
+          size: 'small',
+          material: 'cotton',
+        },
+        availability: 'in stock',
+        sku: '2317',
+        cost: input,
+      },
+    }));
+    const mock2fn = jest.fn((input) => input);
+    sm.bindTaskResource('Test', mockfn);
+    sm.bindTaskResource('Test2', mock2fn);
+    await sm.startExecution({ value: '$23' });
+    expect(mockfn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        MyDetails: {
+          size: 'small',
+          exists: 'in stock',
+          StaticValue: 'foo',
+        },
+      }),
+    );
+  });
+
+  it('can modify input with Context', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/context.json') });
+    const mockfn = jest.fn((input) => input);
+    sm.bindTaskResource('Test', mockfn);
+    await sm.startExecution({ value: 'test' });
+    expect(mockfn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        MyDetails: {
+          Execution: expect.any(String),
+          Retries: expect.any(Number),
+          Name: expect.any(String),
+        },
+      }),
+    );
+  });
+
+  it('can modify output with ResultPath and OutputPath', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/output.json') });
+    const mockfn = jest.fn((input) => 'Hello, ' + input.who + '!');
+    sm.bindTaskResource('Test', mockfn);
+    await sm.startExecution({
+      comment: 'An input comment.',
+      data: {
+        val1: 23,
+        val2: 17,
+      },
+      extra: 'foo',
+      lambda: {
+        who: 'AWS Step Functions',
+      },
+    });
+    expect(mockfn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        val1: 23,
+        val2: 17,
+        lambdaresult: 'Hello, AWS Step Functions!',
+      }),
+    );
+  });
+
   describe('Task', () => {
     it('can run a bound task', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/task.json') });
@@ -135,6 +208,22 @@ describe('Stepfunctions', () => {
       );
       expect(sm.getExecutionResult()).toEqual(
         expect.arrayContaining([{ test: 3 }]),
+      );
+    });
+
+    it('can modify input with Context within Map', async () => {
+      const definition = require('./steps/map-context.json');
+      const sm = new Sfn({ StateMachine: definition });
+      const mockfn = jest.fn((input) => input);
+      const mockMapfn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockfn);
+      sm.bindTaskResource('Mapper', mockMapfn);
+      await sm.startExecution([{ who: 'bob' }, { who: 'meg' }, { who: 'joe' }]);
+      expect(mockfn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.arrayContaining([
+          { ContextIndex: 1, ContextValue: { who: 'meg' } },
+        ]),
       );
     });
 
@@ -538,14 +627,4 @@ describe('Stepfunctions', () => {
   describe('Retry', () => {});
 
   describe('Catch', () => {});
-
-  describe('Input and Output', () => {
-    it.skip('can modify input with Parameters', () => {});
-
-    it.skip('can modify input with InputPath', () => {});
-
-    it.skip('can modify output with ResultPath', () => {});
-
-    it.skip('can modify output OutputPath', () => {});
-  });
 });
