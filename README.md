@@ -60,10 +60,10 @@ You can see more examples in the test file at `/test/stepfunctions.test.js`.
 
 ## API
 
-### 1. startExecution
+### startExecution(Input, Options);
 
 ```
-sm.startExecution(stateMachineDefinition, {
+sm.startExecution(input, {
   respectTime: false,
   maxWaitTime: 30,
   maxConcurrency: 10,
@@ -75,9 +75,25 @@ sm.startExecution(stateMachineDefinition, {
 - maxWaitTime - the maximum amount of time a wait step can function. defaults to 30s.
 - maxConcurrency - allows the amount of parallel tasks to be ran concurrently. defaults to 10.
 
-### 2. bindTaskResource
+### bindTaskResource(Task, Callback)
 
-### 3. getExecutionResult
+```
+new sm = new Sfn({});
+sm.bindTaskResource('HelloWorld', (input) => `hello ${input}`);
+await sm.startExecution('world');
+// will output `hello world`
+```
+
+Must be called before `startExecution`, binds to `Tasks` and replaces their callback to the provided `Callback` parameter.
+
+### getExecutionResult()
+
+Must be called after `startExecution`. This function returns the absolute result from the statemachine if it has finished.
+
+### Task.abort()
+
+`abort` is made available within the replaced Task callbacks made with `bindTaskResource`. this allows you to abort a call
+from within the callback itself.
 
 ## Supported States
 
