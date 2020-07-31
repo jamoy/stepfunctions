@@ -318,52 +318,221 @@ describe('Stepfunctions', () => {
       );
     });
 
-    // it('can test greater than against numbers', async () => {
-    //   const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
-    //   const mockFn = jest.fn(input => input);
-    //   sm.bindTaskResource('Test', mockFn)
-    //   await sm.startExecution({ param1: 1 });
-    //   expect(mockFn).toHaveBeenCalled();
-    //   expect(sm.getExecutionResult()).toEqual(expect.objectContaining({"param1": 1}));
-    // });
-    //
-    // it('can test greater than against strings', async () => {
-    //   const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
-    //   const mockFn = jest.fn(input => input);
-    //   sm.bindTaskResource('Test', mockFn)
-    //   await sm.startExecution({ param1: "tester" });
-    //   expect(mockFn).toHaveBeenCalled();
-    //   expect(sm.getExecutionResult()).toEqual(expect.objectContaining({"param1": "tester"}));
-    // });
+    it('can test greater than against numbers', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 1 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 1 }),
+      );
+    });
 
-    // it('can test greater than against timestamps', async () => {
-    //   const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
-    //   const mockFn = jest.fn(input => input);
-    //   sm.bindTaskResource('Test', mockFn)
-    //   await sm.startExecution({ param1: "2001-02-01T12:00:00Z" });
-    //   expect(mockFn).toHaveBeenCalled();
-    //   expect(sm.getExecutionResult()).toEqual(expect.objectContaining({"param1": "2001-02-01T12:00:00Z"}));
-    // });
+    it('can test greater than against strings', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 'tester' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 'tester' }),
+      );
+    });
 
-    // test NumericGreaterThanEquals
-    // test StringGreaterThanEquals
-    // test TimestampGreaterThanEquals
+    it('can test greater than against timestamps', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: '2001-02-01T12:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: '2001-02-01T12:00:00Z' }),
+      );
+    });
 
-    // test NumericLessThan
-    // test StringLessThan
-    // test TimestampLessThan
+    it('can test greater than equals against numbers', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 10 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 10 }),
+      );
+      await sm.startExecution({ param1: 11 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 11 }),
+      );
+    });
 
-    // test NumericLessThanEquals
-    // test StringLessThanEquals
-    // test TimestampLessThanEquals
+    it('can test greater than equals against strings', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 'tester' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 'tester' }),
+      );
+      await sm.startExecution({ param1: 'testers' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 'testers' }),
+      );
+    });
 
-    // test And
-    // test Not
-    // test Or
+    it('can test greater than equals against timestamps', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: '2001-02-01T12:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: '2001-02-01T12:00:00Z' }),
+      );
+      await sm.startExecution({ param1: '2001-02-02T12:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: '2001-02-02T12:00:00Z' }),
+      );
+    });
 
-    // test Nested And
-    // test Nested Or
-    // test Nested Not
+    it('can test less than against numbers', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: -1 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: -1 }),
+      );
+    });
+
+    it('can test less than against strings', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: 'tes' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: 'tes' }),
+      );
+    });
+
+    it('can test less than against timestamps', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: '2001-01-01T11:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: '2001-01-01T11:00:00Z' }),
+      );
+    });
+
+    it('can test less than equals against numbers', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: 9 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: 9 }),
+      );
+      await sm.startExecution({ param2: 10 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: 10 }),
+      );
+    });
+
+    it('can test less than equals against strings', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: 'tes' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: 'tes' }),
+      );
+      await sm.startExecution({ param2: 'test' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: 'test' }),
+      );
+    });
+
+    it('can test less than equals against timestamps', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: '2001-02-01T12:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: '2001-02-01T12:00:00Z' }),
+      );
+      await sm.startExecution({ param2: '2001-02-01T11:00:00Z' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: '2001-02-01T11:00:00Z' }),
+      );
+    });
+
+    it('can test a simple AND comparison', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param1: 1, param2: 'test' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param1: 1, param2: 'test' }),
+      );
+    });
+
+    it('can test a simple OR comparison', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param2: 1, param3: 'test' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param2: 1, param3: 'test' }),
+      );
+    });
+
+    it('can test a simple NOT comparison', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({ param4: 1 });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({ param4: 1 }),
+      );
+    });
+
+    it('can test a complex AND/OR/NOT comparison', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice.json') });
+      const mockFn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution({
+        param5: 15,
+        param6: 'test',
+        param7: 0,
+        param8: '2001-01-01T12:00:00Z',
+      });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({
+          param5: 15,
+          param6: 'test',
+          param7: 0,
+          param8: '2001-01-01T12:00:00Z',
+        }),
+      );
+    });
   });
 
   describe('Retry', () => {});
