@@ -116,7 +116,7 @@ from within a handler itself.
 
 The spec implemented in https://states-language.net/spec.html is fully supported by this library besides the ones below:
 
-*Experimental*
+**Experimental**
 
 - [ ] Retry
 - [x] Catch
