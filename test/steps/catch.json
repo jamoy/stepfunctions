@@ -1,0 +1,47 @@
+{
+  "StartAt": "First",
+  "States": {
+    "First": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Catch": [
+        {
+          "ErrorEquals": ["CustomError", "States.ALL", "States.TaskFailed"],
+          "ResultPath": "$.error",
+          "Next": "All"
+        },
+        {
+          "ErrorEquals": ["States.Timeout"],
+          "ResultPath": "$.error",
+          "Next": "StatesTimeout"
+        },
+        {
+          "ErrorEquals": ["States.Runtime"],
+          "ResultPath": "$.error",
+          "Next": "StatesRuntime"
+        }
+      ],
+      "Next": "Last"
+    },
+    "All": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Last"
+    },
+    "StatesTimeout": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Last"
+    },
+    "StatesRuntime": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Last"
+    },
+    "Last": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}

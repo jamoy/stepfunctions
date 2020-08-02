@@ -19,9 +19,9 @@ yarn add -D stepfunctions
 
 ## Motivation
 
-I was working on getting step functions orchestrated using Serverless, Lambda, and Step functions and there was no way to run through the statemachine in Jest. So I made the spec, or parts of it, work in JS so that I can spy, and mock the state machine.
+I was working on getting step functions orchestrated using Serverless, Lambda, and Step functions and there was no way to run through the statemachine in Jest. So I made the spec, or parts of it, work in JS so that I can spy and mock the statemachine.
 
-I am perfectly aware of the existence of step functions offline and local stepfunctions, but none of those can be orchestrated natively in a testing context.
+I am perfectly aware of the existence of step-functions-offline and local-stepfunctions, but none of those can be orchestrated natively in a testing context.
 
 ## Usecase
 
@@ -68,7 +68,7 @@ You can see more examples in the test file at `/test/stepfunctions.test.js`.
 
 ### startExecution(Input, Options);
 
-```
+```js
 sm.startExecution(input, {
   respectTime: false,
   maxWaitTime: 30,
@@ -83,14 +83,25 @@ sm.startExecution(input, {
 
 ### bindTaskResource(Task, Callback)
 
-```
-new sm = new Sfn({});
+```js
+const sm = new Sfn({
+  StateMachine: {
+    StartAt: 'HelloWorld',
+    States: {
+      HelloWorld: {
+        Type: 'Task',
+        Resource: 'arn:aws:lambda:ap-southeast-1:123456789012:function:test',
+        End: true,
+      },
+    },
+  },
+});
 sm.bindTaskResource('HelloWorld', (input) => `hello ${input}`);
 await sm.startExecution('world');
 // will output `hello world`
 ```
 
-Must be called before `startExecution`, binds to `Tasks` and replaces their callback to the provided `Callback` parameter.
+Must be called before `startExecution`, binds to `Tasks` and replaces their handler to the provided `Callback` parameter.
 
 ### getExecutionResult()
 
@@ -98,70 +109,35 @@ Must be called after `startExecution`. This function returns the absolute result
 
 ### Task.abort()
 
-`abort` is made available within the replaced Task callbacks made with `bindTaskResource`. this allows you to abort a call
-from within the callback itself.
+`abort` is made available within the replaced Task handlers made with `bindTaskResource`. this allows you to abort a call
+from within a handler itself.
 
-## Supported States
+## Support
 
-The following states are supported by this library:
+The spec implemented in https://states-language.net/spec.html is fully supported by this library besides the ones below:
 
-- [x] Task
-- [x] Map
-- [x] Choice
-- [x] Parallel
+*Experimental*
+
 - [ ] Retry
-- [ ] Catch
-- [x] Pass
-- [x] Succeed
-- [x] Fail
-- [x] Wait
+- [x] Catch
 
-and input and output processing via:
-
-- [x] InputPath
-- [x] ItemsPath
-- [x] Parameters
-- [x] OutputPath
-- [x] ResultPath
-- [x] Context
-
-and choice support:
-
-- [x] And
-- [x] Not
-- [x] Or
-- [x] DefaultState
-- [x] BooleanEquals
-- [x] NumericEquals
-- [x] NumericGreaterThan
-- [x] NumericGreaterThanEquals
-- [x] NumericLessThan
-- [x] NumericLessThanEquals
-- [x] StringEquals
-- [x] StringGreaterThan
-- [x] StringGreaterThanEquals
-- [x] StringLessThan
-- [x] StringLessThanEquals
-- [x] TimestampEquals
-- [x] TimestampGreaterThan
-- [x] TimestampGreaterThanEquals
-- [x] TimestampLessThan
-- [x] TimestampLessThanEquals
-
-More information on the spec above https://states-language.net/spec.html
+The above features are labeled experimental because it cannot be fully spec compliant(yet) due to AWS specific cases.
 
 ## Caveats
 
 1. `Wait` will wait for at most 30 seconds. This is because it's expected that this library
    will be used within a testing context. You can override this behaviour by adding the `respectTime` option to true in the `startExecution` method.
+2. No support for Handling `States.Permissions` as the library will not have context on AWS related permissions.
 
 ## Future
 
 PR's are welcome to help finish the ones below :)
 
-- [ ] Better error handling and messages
 - [ ] Change arn in bindTaskResource instead of the State name
 - [ ] Run `sls invoke local` instead of binding resolvers
+- [ ] Typescript typings
+- [ ] Run via CLI
+- [ ] Remove the "experimental" label on retry and catch
 - [ ] More accurate timing mechanism
 - [ ] use `jest.fakeTimers()` in the test
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`

@@ -227,7 +227,8 @@ describe('Stepfunctions', () => {
       );
     });
 
-    it.skip('can run sequential tasks while limiting concurrency using MaxConcurrency', async () => {});
+    it.skip('can run sequential tasks while limiting concurrency using MaxConcurrency', async () => {
+    });
   });
 
   describe('Parallel', () => {
@@ -265,9 +266,11 @@ describe('Stepfunctions', () => {
       );
     });
 
-    it.skip('can run multiple tasks and aggregate the results into ResultPath', async () => {});
+    it.skip('can run multiple tasks and aggregate the results into ResultPath', async () => {
+    });
 
-    it.skip('can run multiple tasks that respects maxConcurrency', async () => {});
+    it.skip('can run multiple tasks that respects maxConcurrency', async () => {
+    });
   });
 
   describe('Pass', () => {
@@ -286,7 +289,7 @@ describe('Stepfunctions', () => {
       const mockFn = jest.fn();
       sm.on('FailStateEntered', mockFn);
       await expect(sm.startExecution()).rejects.toThrowError(
-        /Transitioned to a FAIL state/,
+        /TaskFailed/,
       );
       expect(mockFn).toHaveBeenCalled();
     });
@@ -311,7 +314,7 @@ describe('Stepfunctions', () => {
       sm.bindTaskResource('Test', succeedingFn);
       sm.on('FailStateEntered', mockFn);
       await expect(sm.startExecution()).rejects.toThrowError(
-        /Transitioned to a FAIL state/,
+        /TaskFailed/,
       );
       expect(mockFn).toHaveBeenCalled();
       expect(succeedingFn).toHaveBeenCalled();
@@ -357,9 +360,11 @@ describe('Stepfunctions', () => {
       expect(mockFn).toHaveBeenCalled();
     }, 2000);
 
-    it.skip('can abort a running statemachine', () => {});
+    it.skip('can abort a running statemachine', () => {
+    });
 
-    it.skip('can expect a timeout when a wait step is running for a long time', () => {});
+    it.skip('can expect a timeout when a wait step is running for a long time', () => {
+    });
   });
 
   describe('Choice', () => {
@@ -624,7 +629,30 @@ describe('Stepfunctions', () => {
     });
   });
 
-  describe('Retry', () => {});
+  it('propagates errors properly', async () => {
+  });
 
-  describe('Catch', () => {});
+  it('can catch multiple states', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/catch.json') });
+    const firstFn = jest.fn(() => {
+      class CustomError extends Error {
+        // empty
+      }
+      throw new CustomError('something happened');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution({});
+    expect(errorFn).toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(expect.objectContaining({ error: expect.objectContaining({ Cause: expect.objectContaining({ errorType: 'CustomError' }) }) }));
+  });
+
+  describe('Retry', () => {
+  });
 });
