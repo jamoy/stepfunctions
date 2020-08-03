@@ -620,7 +620,7 @@ describe('Stepfunctions', () => {
     });
   });
 
-  it('can catch multiple states', async () => {
+  it('can catch custom errors', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/catch.json') });
     const firstFn = jest.fn(() => {
       class CustomError extends Error {
@@ -647,6 +647,57 @@ describe('Stepfunctions', () => {
     );
   });
 
+  it('can catch custom States.ALL', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/catch-all.json') });
+    const firstFn = jest.fn(() => {
+      class Custom2Error extends Error {
+        // empty
+      }
+      throw new Custom2Error('something happened');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution({});
+    expect(errorFn).toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        error: expect.objectContaining({
+          Cause: expect.objectContaining({ errorType: 'States.ALL' }),
+        }),
+      }),
+    );
+  });
+
+  it('can catch custom States.TaskFailed', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/catch.json') });
+    const firstFn = jest.fn(() => {
+      throw new Error('fail the task');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution({});
+    expect(errorFn).toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        error: expect.objectContaining({
+          Cause: expect.objectContaining({ errorType: 'States.TaskFailed' }),
+        }),
+      }),
+    );
+  });
+
   it('can retry failing tasks', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/retry.json') });
     const firstFn = jest.fn((input) => {
@@ -666,10 +717,39 @@ describe('Stepfunctions', () => {
     sm.bindTaskResource('All', errorFn);
     sm.bindTaskResource('Last', lastFn);
     await sm.startExecution({});
+    expect(firstFn).toHaveBeenCalled();
+    expect(errorFn).not.toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
     expect(sm.getExecutionResult()).toEqual(
       expect.objectContaining({ retries: 2 }),
     );
   }, 8000);
 
-  it('can retry failing tasks and finally catch', async () => {});
+  it('can retry failing tasks and finally catch', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/retry.json') });
+    const firstFn = jest.fn(() => {
+      class CustomError extends Error {
+        // empty
+      }
+      throw new CustomError('something happened');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution({});
+    expect(firstFn).toHaveBeenCalled();
+    expect(errorFn).toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        error: expect.objectContaining({
+          Cause: expect.objectContaining({ errorType: 'CustomError' }),
+        }),
+      }),
+    );
+  });
 });

@@ -6,7 +6,7 @@
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "Catch": [
         {
-          "ErrorEquals": ["CustomError", "States.ALL", "States.TaskFailed"],
+          "ErrorEquals": ["CustomError", "States.TaskFailed"],
           "ResultPath": "$.error",
           "Next": "All"
         },
