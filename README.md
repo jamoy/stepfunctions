@@ -62,7 +62,7 @@ describe('StateMachine Test', () => {
 });
 ```
 
-You can see more examples in the test file at `/test/stepfunctions.test.js`.
+You can see more examples in `/test/stepfunctions.test.js`.
 
 ## API
 
@@ -107,6 +107,10 @@ Must be called before `startExecution`, binds to `Tasks` and replaces their hand
 
 Must be called after `startExecution`. This function returns the absolute result from the statemachine if it has finished.
 
+### getReport()
+
+Use `console.table` to list down the transitions that occured.
+
 ### Task.abort()
 
 `abort` is made available within the replaced Task handlers made with `bindTaskResource`. this allows you to abort a call
@@ -118,8 +122,8 @@ The spec implemented in https://states-language.net/spec.html is fully supported
 
 **Experimental**
 
-- [ ] Retry
-- [x] Catch
+- Retry
+- Catch
 
 The above features are labeled experimental because it cannot be fully spec compliant(yet) due to AWS specific cases.
 

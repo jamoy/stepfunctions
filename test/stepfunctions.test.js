@@ -647,5 +647,29 @@ describe('Stepfunctions', () => {
     );
   });
 
-  describe('Retry', () => {});
+  it('can retry failing tasks', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/retry.json') });
+    const firstFn = jest.fn((input) => {
+      if (input.retries === 2) {
+        return input;
+      }
+      class CustomError extends Error {
+        // empty
+      }
+      throw new CustomError('something happened');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution({});
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({ retries: 2 }),
+    );
+  }, 8000);
+
+  it('can retry failing tasks and finally catch', async () => {});
 });
