@@ -32,6 +32,34 @@ describe('Stepfunctions', () => {
     expect(sm.getExecutionResult()).toBe(false);
   });
 
+  it('can modify a simple non-nested input with InputPath and Parameters', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/input-simple.json') });
+    const mockfn = jest.fn((input) => ({
+      comment: 'Example for Parameters.',
+      product: {
+        details: {
+          color: 'blue',
+          size: 'small',
+          material: 'cotton',
+        },
+        availability: 'in stock',
+        sku: '2317',
+        cost: input,
+      },
+    }));
+    const mock2fn = jest.fn((input) => input);
+    sm.bindTaskResource('Test', mockfn);
+    sm.bindTaskResource('Test2', mock2fn);
+    await sm.startExecution({ value: '$23' });
+    expect(mockfn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        size: 'small',
+        exists: 'in stock',
+      }),
+    );
+  });
+
   it('can modify input with InputPath and Parameters', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/input.json') });
     const mockfn = jest.fn((input) => ({
@@ -58,6 +86,9 @@ describe('Stepfunctions', () => {
           size: 'small',
           exists: 'in stock',
           StaticValue: 'foo',
+          nested: {
+            exists: 'in stock'
+          }
         },
       }),
     );
@@ -620,6 +651,12 @@ describe('Stepfunctions', () => {
     });
   });
 
+  it.skip('can override InputPath as null and use an empty object input', () => {});
+
+  it.skip('can override ResultPath as null and returns Input instead', () => {});
+
+  it.skip('can override OutputPath as null and return an empty object', () => {});
+
   it('can catch custom errors', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/catch.json') });
     const firstFn = jest.fn(() => {
@@ -751,5 +788,35 @@ describe('Stepfunctions', () => {
         }),
       }),
     );
+  });
+
+  describe('Intrinsic Functions (August 2020 Update)', () => {
+    it('States.Format', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/input-with-intrinsic-functions.json') });
+      const mockfn = jest.fn(() => ({
+        comment: 'Example for Parameters.',
+        product: {
+          details: {
+            color: 'blue',
+            size: 'small',
+            material: 'cotton',
+          },
+          availability: 'in stock',
+          sku: '2317',
+        },
+      }));
+      const mock2fn = jest.fn((input) => input);
+      sm.bindTaskResource('Test', mockfn);
+      sm.bindTaskResource('Test2', mock2fn);
+      await sm.startExecution({});
+      expect(mockfn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({
+          size: 'smallcm',
+          label: 'blue\'s cotton',
+          exists: 'in stock',
+        }),
+      );
+    });
   });
 });

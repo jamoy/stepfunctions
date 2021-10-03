@@ -3,21 +3,15 @@
   "States": {
     "Test": {
       "Type": "Task",
-      "InputPath": "$.value",
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "Next": "Test2"
     },
     "Test2": {
       "Type": "Task",
       "Parameters": {
-        "MyDetails": {
-          "size.$": "$.product.details.size",
-          "exists.$": "$.product.availability",
-          "StaticValue": "foo",
-          "nested": {
-            "exists.$": "$.product.availability"
-          }
-        }
+        "size.$": "States.Format('{}cm', $.product.details.size)",
+        "label.$": "States.Format('{}\\'s {}', $.product.details.color, $.product.details.material)",
+        "exists.$": "$.product.availability"
       },
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "End": true
