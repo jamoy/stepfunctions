@@ -5,8 +5,11 @@
     "node": true,
     "jest": true
   },
-  "extends": "eslint:recommended",
-  "parser": "babel-eslint",
+  "plugins": [
+    "json",
+    "unicorn",
+    "prettier"
+  ],
   "parserOptions": {
     "ecmaVersion": 11
   },

@@ -6,7 +6,6 @@
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "InputPath": "$.lambda",
       "ResultPath": "$.data.lambdaresult",
-      "OutputPath": "$.newData",
       "End": true
     }
   }

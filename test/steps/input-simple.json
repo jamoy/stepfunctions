@@ -10,14 +10,8 @@
     "Test2": {
       "Type": "Task",
       "Parameters": {
-        "MyDetails": {
-          "size.$": "$.product.details.size",
-          "exists.$": "$.product.availability",
-          "StaticValue": "foo",
-          "nested": {
-            "exists.$": "$.product.availability"
-          }
-        }
+        "size.$": "$.product.details.size",
+        "exists.$": "$.product.availability"
       },
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "End": true

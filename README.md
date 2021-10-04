@@ -142,9 +142,15 @@ PR's are welcome to help finish the ones below :)
 - [ ] Typescript typings
 - [ ] Run via CLI
 - [ ] Remove the "experimental" label on retry and catch
+- [ ] Support for timeoutseconds/timeoutsecondspath/heartbeatseconds/heartbeatsecondspath
 - [ ] More accurate timing mechanism
 - [ ] use `jest.fakeTimers()` in the test
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`
+- [ ] Support for Arrays in OutputPath `$.a[0,1]` to `[1,2]`
+
+## Changelog
+
+Implemented august 2020 update https://states-language.net/spec.html
 
 ## License
 
