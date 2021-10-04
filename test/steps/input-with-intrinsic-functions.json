@@ -11,7 +11,9 @@
       "Parameters": {
         "size.$": "States.Format('{}cm', $.product.details.size)",
         "label.$": "States.Format('{}\\'s {}', $.product.details.color, $.product.details.material)",
-        "exists.$": "$.product.availability"
+        "nested": {
+          "exists.$": "$.product.availability"
+        }
       },
       "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
       "End": true

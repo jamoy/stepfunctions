@@ -10,3 +10,21 @@ export interface State {
   Retry?: any;
   MaxAttempts?: any;
 }
+
+type opts = {
+  Name: string;
+  StateMachine: StateMachine;
+  Resources: any;
+  respectTime: boolean;
+  maxWaitTime: number;
+  maxConcurrency: number;
+}
+
+interface StateMachine {
+  StartAt: string;
+  States: States
+}
+
+interface States {
+  [key: string]: State[];
+}

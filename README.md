@@ -146,6 +146,7 @@ PR's are welcome to help finish the ones below :)
 - [ ] More accurate timing mechanism
 - [ ] use `jest.fakeTimers()` in the test
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`
+- [ ] Support for Arrays in OutputPath `$.a[0,1]` to `[1,2]`
 
 ## Changelog
 

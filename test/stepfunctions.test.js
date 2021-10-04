@@ -111,7 +111,66 @@ describe('Stepfunctions', () => {
     );
   });
 
-  it('can modify output with ResultPath and OutputPath', async () => {
+  it('can modify output with ResultPath', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/resultpath.json') });
+    const mockfn = jest.fn((input) => 'Hello, ' + input.who + '!');
+    sm.bindTaskResource('Test', mockfn);
+    await sm.startExecution({
+      comment: 'An input comment.',
+      data: {
+        val1: 23,
+        val2: 17,
+      },
+      extra: 'foo',
+      lambda: {
+        who: 'AWS Step Functions',
+      },
+    });
+    expect(mockfn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        comment: 'An input comment.',
+        data: {
+          val1: 23,
+          val2: 17,
+          lambdaresult: 'Hello, AWS Step Functions!',
+        },
+        extra: 'foo',
+        lambda: {
+          who: 'AWS Step Functions',
+        },
+      }),
+    );
+  });
+
+  it('can modify output with OutputPath', async () => {
+    const sm = new Sfn({ StateMachine: require('./steps/outputpath.json') });
+    const mockfn = jest.fn((input) => 'Hello, ' + input.who + '!');
+    sm.bindTaskResource('Test', mockfn);
+    await sm.startExecution({
+      comment: 'An input comment.',
+      data: {
+        val1: 23,
+        val2: 17,
+      },
+      extra: 'foo',
+      lambda: {
+        who: 'AWS Step Functions',
+      },
+    });
+    expect(mockfn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({
+        data: {
+          val1: 23,
+          val2: 17,
+          lambdaresult: 'Hello, AWS Step Functions!',
+        }
+      }),
+    );
+  });
+
+  it('can modify output with ResulPath and OutputPath', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/output.json') });
     const mockfn = jest.fn((input) => 'Hello, ' + input.who + '!');
     sm.bindTaskResource('Test', mockfn);
@@ -129,9 +188,9 @@ describe('Stepfunctions', () => {
     expect(mockfn).toHaveBeenCalled();
     expect(sm.getExecutionResult()).toEqual(
       expect.objectContaining({
-        val1: 23,
-        val2: 17,
-        lambdaresult: 'Hello, AWS Step Functions!',
+        newData: {
+          lambdaresult: 'Hello, AWS Step Functions!',
+        }
       }),
     );
   });
@@ -677,9 +736,7 @@ describe('Stepfunctions', () => {
     expect(lastFn).toHaveBeenCalled();
     expect(sm.getExecutionResult()).toEqual(
       expect.objectContaining({
-        error: expect.objectContaining({
-          Cause: expect.objectContaining({ errorType: 'CustomError' }),
-        }),
+        Cause: expect.objectContaining({ errorType: 'CustomError' }),
       }),
     );
   });
@@ -704,9 +761,7 @@ describe('Stepfunctions', () => {
     expect(lastFn).toHaveBeenCalled();
     expect(sm.getExecutionResult()).toEqual(
       expect.objectContaining({
-        error: expect.objectContaining({
-          Cause: expect.objectContaining({ errorType: 'States.ALL' }),
-        }),
+        Cause: expect.objectContaining({ errorType: 'States.ALL' }),
       }),
     );
   });
@@ -728,9 +783,7 @@ describe('Stepfunctions', () => {
     expect(lastFn).toHaveBeenCalled();
     expect(sm.getExecutionResult()).toEqual(
       expect.objectContaining({
-        error: expect.objectContaining({
-          Cause: expect.objectContaining({ errorType: 'States.TaskFailed' }),
-        }),
+        Cause: expect.objectContaining({ errorType: 'States.TaskFailed' }),
       }),
     );
   });
@@ -783,9 +836,7 @@ describe('Stepfunctions', () => {
     expect(lastFn).toHaveBeenCalled();
     expect(sm.getExecutionResult()).toEqual(
       expect.objectContaining({
-        error: expect.objectContaining({
-          Cause: expect.objectContaining({ errorType: 'CustomError' }),
-        }),
+        Cause: expect.objectContaining({ errorType: 'CustomError' }),
       }),
     );
   });
@@ -793,7 +844,7 @@ describe('Stepfunctions', () => {
   describe('Intrinsic Functions (August 2020 Update)', () => {
     it('States.Format', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/input-with-intrinsic-functions.json') });
-      const mockfn = jest.fn(() => ({
+      const mockfn = jest.fn((input) => ({
         comment: 'Example for Parameters.',
         product: {
           details: {
@@ -813,10 +864,19 @@ describe('Stepfunctions', () => {
       expect(sm.getExecutionResult()).toEqual(
         expect.objectContaining({
           size: 'smallcm',
-          label: 'blue\'s cotton',
-          exists: 'in stock',
+          label: 'blue\\\'s cotton',
+          nested: {
+            exists: 'in stock',
+          }
         }),
       );
     });
+
+    it.skip('States.StringToJson', async () => {});
+
+    it.skip('States.JsonToString', async () => {});
+
+    it.skip('States.Array', async () => {});
   });
+
 });
