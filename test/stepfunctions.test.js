@@ -725,6 +725,38 @@ describe('Stepfunctions', () => {
     );
   }, 8000);
 
+  it('can retry failing tasks and maintain the same transformed input', async () => {
+    const sm = new Sfn({
+      StateMachine: require('./steps/retry-transform-input.json'),
+    });
+    const args = { bar: 'baz' };
+    const firstFn = jest.fn((input) => {
+      const { retries, foo } = input;
+      expect(foo).toEqual(args);
+      if (retries === 3) {
+        return input;
+      }
+      class CustomError extends Error {
+        // empty
+      }
+      throw new CustomError('something happened');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution(args);
+    expect(firstFn).toHaveBeenCalled();
+    expect(errorFn).not.toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({ retries: 3, foo: args }),
+    );
+  }, 8000);
+
   it('can retry failing tasks and finally catch', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/retry.json') });
     const firstFn = jest.fn(() => {
