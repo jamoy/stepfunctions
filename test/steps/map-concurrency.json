@@ -1,0 +1,21 @@
+{
+  "StartAt": "Map",
+  "States": {
+    "Map": {
+      "Type": "Map",
+      "MaxConcurrency": 2,
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "Work",
+        "States": {
+          "Work": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

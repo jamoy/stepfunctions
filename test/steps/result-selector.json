@@ -1,0 +1,15 @@
+{
+  "StartAt": "Select",
+  "States": {
+    "Select": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "ResultSelector": {
+        "status.$": "$.Payload.status",
+        "count.$": "States.ArrayLength($.Payload.items)"
+      },
+      "ResultPath": "$.result",
+      "End": true
+    }
+  }
+}

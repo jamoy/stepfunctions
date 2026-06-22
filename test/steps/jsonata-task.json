@@ -1,0 +1,16 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Price",
+  "States": {
+    "Price": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": { "sku": "{% $states.input.sku %}" },
+      "Output": {
+        "price": "{% $states.result.price %}",
+        "sku": "{% $states.input.sku %}"
+      },
+      "End": true
+    }
+  }
+}

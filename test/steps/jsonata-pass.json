@@ -1,0 +1,11 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Sum",
+  "States": {
+    "Sum": {
+      "Type": "Pass",
+      "Output": { "sum": "{% $states.input.a + $states.input.b %}" },
+      "End": true
+    }
+  }
+}

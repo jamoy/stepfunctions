@@ -1,0 +1,14 @@
+{
+  "StartAt": "Intrinsics",
+  "States": {
+    "Intrinsics": {
+      "Type": "Pass",
+      "Parameters": {
+        "uuid.$": "States.UUID()",
+        "hash.$": "States.Hash('hello', 'SHA-256')",
+        "decoded.$": "States.Base64Decode('aGVsbG8=')"
+      },
+      "End": true
+    }
+  }
+}

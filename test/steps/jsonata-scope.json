@@ -1,0 +1,35 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Seed",
+  "States": {
+    "Seed": { "Type": "Pass", "Assign": { "region": "EU" }, "Next": "Fan" },
+    "Fan": {
+      "Type": "Map",
+      "Items": "{% $states.input.ids %}",
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "Tag",
+        "States": {
+          "Tag": {
+            "Type": "Pass",
+            "Output": {
+              "id": "{% $states.input %}",
+              "region": "{% $region %}"
+            },
+            "End": true
+          }
+        }
+      },
+      "Output": "{% $states.result %}",
+      "Next": "After"
+    },
+    "After": {
+      "Type": "Pass",
+      "Output": {
+        "results": "{% $states.input %}",
+        "regionStillVisible": "{% $region %}"
+      },
+      "End": true
+    }
+  }
+}

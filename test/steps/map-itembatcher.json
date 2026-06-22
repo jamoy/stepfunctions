@@ -1,0 +1,27 @@
+{
+  "StartAt": "Map",
+  "States": {
+    "Map": {
+      "Type": "Map",
+      "ItemsPath": "$.items",
+      "ItemBatcher": {
+        "MaxItemsPerBatch": 2,
+        "BatchInput": {
+          "factor.$": "$.factor"
+        }
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "Batch",
+        "States": {
+          "Batch": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

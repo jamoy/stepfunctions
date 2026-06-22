@@ -1,0 +1,26 @@
+{
+  "StartAt": "Choices",
+  "States": {
+    "Choices": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.x",
+          "IsString": false,
+          "Next": "Matched"
+        }
+      ],
+      "Default": "Defaulted"
+    },
+    "Matched": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    },
+    "Defaulted": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}

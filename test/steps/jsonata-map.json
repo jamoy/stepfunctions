@@ -1,0 +1,25 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Totals",
+  "States": {
+    "Totals": {
+      "Type": "Map",
+      "Items": "{% $states.input.items %}",
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "Total",
+        "States": {
+          "Total": {
+            "Type": "Pass",
+            "Output": {
+              "name": "{% $states.input.name %}",
+              "total": "{% $states.input.price * $states.input.quantity %}"
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

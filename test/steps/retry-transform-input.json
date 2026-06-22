@@ -1,0 +1,39 @@
+{
+  "StartAt": "First",
+  "States": {
+    "First": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Parameters": {
+        "foo.$": "$",
+        "retries.$": "$$.State.RetryCount"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["CustomError"],
+          "IntervalSeconds": 1,
+          "BackoffRate": 1,
+          "MaxAttempts": 3
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["CustomError"],
+          "ResultPath": "$.error",
+          "Next": "All"
+        }
+      ],
+      "Next": "Last"
+    },
+    "All": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "Next": "Last"
+    },
+    "Last": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}

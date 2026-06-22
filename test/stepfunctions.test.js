@@ -2,9 +2,8 @@ const Sfn = require('../lib/stepfunctions');
 
 describe('Stepfunctions', () => {
   it('validates states definition via asl-validator', async () => {
-    const message = 'data should NOT have additional properties';
     expect(() => new Sfn({ StateMachine: { willThrow: true } })).toThrow(
-      message,
+      /required property 'StartAt'/,
     );
   });
 
@@ -285,7 +284,7 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/fail.json') });
       const mockFn = jest.fn();
       sm.on('FailStateEntered', mockFn);
-      await expect(sm.startExecution()).rejects.toThrowError(/TaskFailed/);
+      await expect(sm.startExecution()).rejects.toThrow(/TaskFailed/);
       expect(mockFn).toHaveBeenCalled();
     });
   });
@@ -308,7 +307,7 @@ describe('Stepfunctions', () => {
       const mockFn = jest.fn();
       sm.bindTaskResource('Test', succeedingFn);
       sm.on('FailStateEntered', mockFn);
-      await expect(sm.startExecution()).rejects.toThrowError(/TaskFailed/);
+      await expect(sm.startExecution()).rejects.toThrow(/TaskFailed/);
       expect(mockFn).toHaveBeenCalled();
       expect(succeedingFn).toHaveBeenCalled();
     });
@@ -725,6 +724,38 @@ describe('Stepfunctions', () => {
     );
   }, 8000);
 
+  it('can retry failing tasks and maintain the same transformed input', async () => {
+    const sm = new Sfn({
+      StateMachine: require('./steps/retry-transform-input.json'),
+    });
+    const args = { bar: 'baz' };
+    const firstFn = jest.fn((input) => {
+      const { retries, foo } = input;
+      expect(foo).toEqual(args);
+      if (retries === 3) {
+        return input;
+      }
+      class CustomError extends Error {
+        // empty
+      }
+      throw new CustomError('something happened');
+    });
+    const errorFn = jest.fn((input) => input);
+    const lastFn = jest.fn((input) => {
+      return input;
+    });
+    sm.bindTaskResource('First', firstFn);
+    sm.bindTaskResource('All', errorFn);
+    sm.bindTaskResource('Last', lastFn);
+    await sm.startExecution(args);
+    expect(firstFn).toHaveBeenCalled();
+    expect(errorFn).not.toHaveBeenCalled();
+    expect(lastFn).toHaveBeenCalled();
+    expect(sm.getExecutionResult()).toEqual(
+      expect.objectContaining({ retries: 3, foo: args }),
+    );
+  }, 8000);
+
   it('can retry failing tasks and finally catch', async () => {
     const sm = new Sfn({ StateMachine: require('./steps/retry.json') });
     const firstFn = jest.fn(() => {
@@ -751,5 +782,418 @@ describe('Stepfunctions', () => {
         }),
       }),
     );
+  });
+
+  describe('Choice (newer operators)', () => {
+    const run = async (input) => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      const mockFn = jest.fn((value) => value);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution(input);
+      return mockFn;
+    };
+
+    it('matches with StringMatches wildcards', async () => {
+      expect(await run({ matchStr: 'foobar.log' })).toHaveBeenCalled();
+      expect(await run({ matchStr: 'foo.log' })).toHaveBeenCalled();
+    });
+
+    it('anchors StringMatches at both ends and is case-sensitive', async () => {
+      // `*` spans any run of characters, including a literal dot
+      expect(await run({ matchStr: 'foo.log.log' })).toHaveBeenCalled();
+      const fail = async (matchStr) => {
+        const sm = new Sfn({
+          StateMachine: require('./steps/choice-new.json'),
+        });
+        await expect(sm.startExecution({ matchStr })).rejects.toThrow(
+          /TaskFailed/,
+        );
+      };
+      await fail('xfoo.log'); // must start with foo
+      await fail('foo.LOG'); // case-sensitive suffix
+    });
+
+    it('does not match StringMatches when suffix differs', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ matchStr: 'food.txt' })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+
+    it('treats an escaped asterisk as a literal in StringMatches', async () => {
+      expect(await run({ lit: 'a*b' })).toHaveBeenCalled();
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ lit: 'axb' })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+
+    it('matches IsPresent for a present (even falsy) value', async () => {
+      expect(await run({ maybePresent: 0 })).toHaveBeenCalled();
+    });
+
+    it('matches IsNull only when the value is null', async () => {
+      expect(await run({ nullable: null })).toHaveBeenCalled();
+    });
+
+    it('matches IsNumeric, IsString, IsBoolean type checks', async () => {
+      expect(await run({ num: 42 })).toHaveBeenCalled();
+      expect(await run({ str: 'hello' })).toHaveBeenCalled();
+      expect(await run({ bool: false })).toHaveBeenCalled();
+    });
+
+    it('matches IsTimestamp for an RFC3339 timestamp', async () => {
+      expect(await run({ ts: '2020-01-01T00:00:00Z' })).toHaveBeenCalled();
+    });
+
+    it('compares against another path with NumericGreaterThanPath', async () => {
+      expect(await run({ a: 5, b: 3 })).toHaveBeenCalled();
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ a: 2, b: 3 })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+
+    it('compares against another path with StringEqualsPath', async () => {
+      expect(await run({ x: 'hi', y: 'hi' })).toHaveBeenCalled();
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ x: 'hi', y: 'bye' })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+  });
+
+  describe('Intrinsic functions', () => {
+    it('evaluates intrinsics inside Parameters', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/intrinsics.json') });
+      await sm.startExecution({
+        name: 'Sam',
+        age: 5,
+        items: [1, 2, 3],
+        dups: [1, 1, 2, 3, 3],
+        csv: 'a,b,c',
+        obj: { x: 1 },
+        jsonStr: '{"y":2}',
+        j1: { a: 1 },
+        j2: { b: 2 },
+      });
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({
+          formatted: 'Hello, Sam! You are 5.',
+          escaped: 'a{b} Sam',
+          arr: [5, 1, 'literal, with comma', true, null],
+          len: 3,
+          first: 1,
+          sum: 15,
+          nested: 6,
+          range: [1, 3, 5, 7, 9],
+          partition: [[1, 2], [3]],
+          contains: true,
+          unique: [1, 2, 3],
+          split: ['a', 'b', 'c'],
+          b64: 'aGVsbG8=',
+          json: '{"x":1}',
+          parsed: { y: 2 },
+          merged: { a: 1, b: 2 },
+        }),
+      );
+    });
+
+    it('evaluates UUID, Hash and Base64Decode', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/intrinsics-uuid-hash.json'),
+      });
+      await sm.startExecution({});
+      const result = sm.getExecutionResult();
+      expect(result.uuid).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+      expect(result.hash).toBe(
+        '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+      );
+      expect(result.decoded).toBe('hello');
+    });
+
+    it('evaluates MathRandom (seeded is deterministic, ranged is bounded)', async () => {
+      const definition = require('./steps/intrinsics-mathrandom.json');
+      const run = async () => {
+        const sm = new Sfn({ StateMachine: definition });
+        await sm.startExecution({});
+        return sm.getExecutionResult();
+      };
+      const a = await run();
+      const b = await run();
+      // same seed -> same value
+      expect(a.seeded).toBe(b.seeded);
+      expect(a.seeded).toBeGreaterThanOrEqual(1);
+      expect(a.seeded).toBeLessThan(100);
+      // unseeded -> within range
+      expect(a.ranged).toBeGreaterThanOrEqual(1);
+      expect(a.ranged).toBeLessThan(10);
+      expect(Number.isInteger(a.seeded)).toBe(true);
+      expect(Number.isInteger(a.ranged)).toBe(true);
+    });
+
+    it('fails when States.Format placeholders and arguments mismatch', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/intrinsics-format-error.json'),
+      });
+      await expect(sm.startExecution({ only: 'x' })).rejects.toThrow(
+        /placeholders/,
+      );
+    });
+  });
+
+  describe('ResultSelector', () => {
+    it('transforms a task result before ResultPath', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/result-selector.json'),
+      });
+      const mockFn = jest.fn(() => ({
+        Payload: { status: 'OK', items: [1, 2, 3] },
+        Meta: { requestId: 'abc-123' },
+      }));
+      sm.bindTaskResource('Select', mockFn);
+      await sm.startExecution({ orderId: 'o-1' });
+      expect(sm.getExecutionResult()).toEqual({
+        orderId: 'o-1',
+        result: { status: 'OK', count: 3 },
+      });
+    });
+  });
+
+  describe('Map (ItemProcessor / ItemSelector)', () => {
+    it('supports ItemProcessor and ItemSelector aliases', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-itemprocessor.json'),
+      });
+      await sm.startExecution({ items: [{ v: 1 }, { v: 2 }, { v: 3 }] });
+      expect(sm.getExecutionResult()).toEqual([
+        { result: 2, idx: 0 },
+        { result: 4, idx: 1 },
+        { result: 6, idx: 2 },
+      ]);
+    });
+  });
+
+  describe('Map (Distributed)', () => {
+    it('limits simultaneous iterations to MaxConcurrency', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-concurrency.json'),
+      });
+      let active = 0;
+      let maxActive = 0;
+      sm.bindTaskResource('Work', async (input) => {
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        active--;
+        return input;
+      });
+      await sm.startExecution([1, 2, 3, 4, 5, 6]);
+      expect(maxActive).toBeLessThanOrEqual(2);
+      expect(sm.getExecutionResult()).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('groups items with ItemBatcher and BatchInput', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-itembatcher.json'),
+      });
+      sm.bindTaskResource('Batch', (input) => input);
+      await sm.startExecution({ items: [1, 2, 3, 4, 5], factor: 10 });
+      expect(sm.getExecutionResult()).toEqual([
+        { Items: [1, 2], BatchInput: { factor: 10 } },
+        { Items: [3, 4], BatchInput: { factor: 10 } },
+        { Items: [5], BatchInput: { factor: 10 } },
+      ]);
+    });
+
+    it('tolerates failures up to ToleratedFailureCount', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-tolerated.json'),
+      });
+      sm.bindTaskResource('MaybeFail', (input) => {
+        if (input === 2) {
+          throw new Error('boom');
+        }
+        return input;
+      });
+      await sm.startExecution([1, 2, 3]);
+      // the failed item is dropped; the rest succeed
+      expect(sm.getExecutionResult()).toEqual([1, 3]);
+    });
+
+    it('fails the Map when failures exceed the tolerance', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-tolerated.json'),
+      });
+      sm.bindTaskResource('MaybeFail', (input) => {
+        if (input >= 2) {
+          throw new Error('boom');
+        }
+        return input;
+      });
+      await expect(sm.startExecution([1, 2, 3])).rejects.toThrow();
+    });
+  });
+
+  describe('InputPath with Parameters', () => {
+    it('applies Parameters to the InputPath-narrowed input', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/input-parameters.json'),
+      });
+      await sm.startExecution({ inner: { a: 42 }, a: 999 });
+      expect(sm.getExecutionResult()).toEqual({ picked: 42 });
+    });
+  });
+
+  describe('Choice data-test operators on absent fields', () => {
+    it('does not match a negated Is* operator when the field is absent', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/choice-isabsent.json'),
+      });
+      const matchedFn = jest.fn((input) => input);
+      const defaultedFn = jest.fn((input) => input);
+      sm.bindTaskResource('Matched', matchedFn);
+      sm.bindTaskResource('Defaulted', defaultedFn);
+      await sm.startExecution({});
+      expect(matchedFn).not.toHaveBeenCalled();
+      expect(defaultedFn).toHaveBeenCalled();
+    });
+
+    it('matches a negated Is* operator for a present value of another type', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/choice-isabsent.json'),
+      });
+      const matchedFn = jest.fn((input) => input);
+      const defaultedFn = jest.fn((input) => input);
+      sm.bindTaskResource('Matched', matchedFn);
+      sm.bindTaskResource('Defaulted', defaultedFn);
+      await sm.startExecution({ x: 5 });
+      expect(matchedFn).toHaveBeenCalled();
+      expect(defaultedFn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Parallel', () => {
+    it('does not mutate its definition across executions', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/parallel.json') });
+      sm.bindTaskResource('ParallelTask1', (input) => input[0] + input[1]);
+      sm.bindTaskResource('ParallelTask2', (input) => input[0] - input[1]);
+      await sm.startExecution([1, 1]);
+      expect(sm.getExecutionResult()).toEqual(expect.arrayContaining([2, 0]));
+      await sm.startExecution([1, 1]);
+      expect(sm.getExecutionResult()).toEqual(expect.arrayContaining([2, 0]));
+    });
+  });
+
+  describe('Variables (Assign)', () => {
+    it('assigns variables and references them in a later state (JSONPath)', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/assign-jsonpath.json'),
+      });
+      await sm.startExecution({ name: 'Ada', n: 5 });
+      expect(sm.getExecutionResult()).toEqual({
+        msg: 'Hello Ada',
+        doubled: 10,
+      });
+    });
+  });
+
+  describe('JSONata', () => {
+    it('evaluates a Pass Output expression', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-pass.json'),
+      });
+      await sm.startExecution({ a: 2, b: 3 });
+      expect(sm.getExecutionResult()).toEqual({ sum: 5 });
+    });
+
+    it('passes Arguments to a Task and shapes Output', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-task.json'),
+      });
+      const mockFn = jest.fn((args) => {
+        expect(args).toEqual({ sku: 'A1' });
+        return { price: 9.99 };
+      });
+      sm.bindTaskResource('Price', mockFn);
+      await sm.startExecution({ sku: 'A1' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual({ price: 9.99, sku: 'A1' });
+    });
+
+    it('evaluates a Choice Condition', async () => {
+      const adult = new Sfn({
+        StateMachine: require('./steps/jsonata-choice.json'),
+      });
+      await adult.startExecution({ age: 20 });
+      expect(adult.getExecutionResult()).toEqual({ status: 'adult' });
+
+      const minor = new Sfn({
+        StateMachine: require('./steps/jsonata-choice.json'),
+      });
+      await minor.startExecution({ age: 10 });
+      expect(minor.getExecutionResult()).toEqual({ status: 'minor' });
+    });
+
+    it('maps items with Items, ItemProcessor and Output expressions', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/jsonata-map.json') });
+      await sm.startExecution({
+        items: [
+          { name: 'Widget', price: 5, quantity: 3 },
+          { name: 'Gadget', price: 12, quantity: 2 },
+        ],
+      });
+      expect(sm.getExecutionResult()).toEqual([
+        { name: 'Widget', total: 15 },
+        { name: 'Gadget', total: 24 },
+      ]);
+    });
+
+    it('lets a Map child read an outer variable', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-scope.json'),
+      });
+      await sm.startExecution({ ids: [1, 2] });
+      expect(sm.getExecutionResult()).toEqual({
+        results: [
+          { id: 1, region: 'EU' },
+          { id: 2, region: 'EU' },
+        ],
+        regionStillVisible: 'EU',
+      });
+    });
+
+    it('does not leak a child-assigned variable to the parent scope', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-scope-leak.json'),
+      });
+      await expect(sm.startExecution({})).rejects.toThrow();
+    });
+
+    it('merges Parallel branch results via an Output expression', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-parallel.json'),
+      });
+      await sm.startExecution({ x: 1, y: 2 });
+      expect(sm.getExecutionResult()).toEqual({ a: 1, b: 2 });
+    });
+
+    it('isolates per-iteration variable scopes in a concurrent Map', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-map-assign.json'),
+      });
+      await sm.startExecution([1, 2, 3, 4, 5]);
+      // Each iteration assigns `mine` then reads it in a later state; with
+      // shared scope, concurrent iterations would clobber each other.
+      expect(sm.getExecutionResult()).toEqual([
+        { mine: 1, item: 1 },
+        { mine: 2, item: 2 },
+        { mine: 3, item: 3 },
+        { mine: 4, item: 4 },
+        { mine: 5, item: 5 },
+      ]);
+    });
   });
 });
