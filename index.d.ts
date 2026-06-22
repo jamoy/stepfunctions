@@ -31,13 +31,16 @@ declare namespace StepFunction {
  * run Node.js Lambda handlers inside a test environment.
  */
 declare class StepFunction extends EventEmitter {
-  constructor(sm: StepFunction.Options);
+  constructor(sm: StepFunction.Options | StepFunction.StateMachine);
 
-  /** Start an execution, passing `input` to the first state. */
+  /**
+   * Start an execution, passing `input` to the first state. Resolves to the
+   * final output (the same value as `getExecutionResult()`).
+   */
   startExecution(
     input?: any,
     opts?: StepFunction.ExecutionOptions,
-  ): Promise<void>;
+  ): Promise<any>;
 
   /** Return the final output of the most recent execution. */
   getExecutionResult(): any;

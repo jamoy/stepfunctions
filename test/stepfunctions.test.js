@@ -1196,4 +1196,35 @@ describe('Stepfunctions', () => {
       ]);
     });
   });
+
+  describe('ergonomics', () => {
+    it('startExecution resolves to the execution result', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/simple.json') });
+      sm.bindTaskResource('Test', (input) => input.test === 1);
+      const result = await sm.startExecution({ test: 1 });
+      expect(result).toBe(true);
+    });
+
+    it('getExecutionResult is idempotent (does not mutate)', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/simple.json') });
+      sm.bindTaskResource('Test', (input) => input.test === 1);
+      await sm.startExecution({ test: 1 });
+      expect(sm.getExecutionResult()).toBe(true);
+      expect(sm.getExecutionResult()).toBe(true);
+      expect(sm.getExecutionResult()).toBe(true);
+    });
+
+    it('accepts a raw state machine definition (no StateMachine wrapper)', async () => {
+      const sm = new Sfn(require('./steps/simple.json'));
+      sm.bindTaskResource('Test', (input) => input.test === 1);
+      const result = await sm.startExecution({ test: 1 });
+      expect(result).toBe(true);
+    });
+
+    it('still validates a raw state machine definition', () => {
+      expect(() => new Sfn({ willThrow: true })).toThrow(
+        /required property 'StartAt'/,
+      );
+    });
+  });
 });
