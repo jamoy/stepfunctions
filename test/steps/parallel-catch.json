@@ -1,0 +1,38 @@
+{
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "Boom",
+          "States": {
+            "Boom": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "Recovered"
+        }
+      ],
+      "Next": "Done"
+    },
+    "Recovered": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    },
+    "Done": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    }
+  }
+}
