@@ -14,6 +14,22 @@ declare namespace StepFunction {
   /** A bound Task handler, e.g. a Serverless/Lambda handler. */
   type TaskResource = (input: any) => any;
 
+  /**
+   * A bound resource: a handler function or a Serverless-style reference
+   * (`'path/to/file.exportedFn'` or `{ handler: 'path/to/file.exportedFn' }`).
+   */
+  type ResourceReference = TaskResource | string | { handler: string };
+
+  /** A single recorded transition yielded by `trace()`. */
+  interface Transition {
+    state: string;
+    step: any;
+    input: any;
+    output: any;
+    elapsed: number;
+    [key: string]: any;
+  }
+
   /** An Amazon States Language state machine definition. */
   type StateMachine = Record<string, any>;
 
@@ -21,8 +37,10 @@ declare namespace StepFunction {
     /** Friendly name for the execution. Defaults to the StateMachine `StartAt`. */
     Name?: string;
     StateMachine: StateMachine;
-    /** Map of Task state name to its handler. */
-    Resources?: Record<string, TaskResource>;
+    /** Map of Task state name (or Resource ARN) to its handler. */
+    Resources?: Record<string, ResourceReference>;
+    /** Base dir for resolving Serverless-style handler refs. Defaults to cwd. */
+    handlerBasePath?: string;
   }
 }
 
@@ -42,14 +60,23 @@ declare class StepFunction extends EventEmitter {
     opts?: StepFunction.ExecutionOptions,
   ): Promise<any>;
 
+  /**
+   * Run an execution and walk it generator-style, yielding each transition.
+   * The iterator's return value is the final output.
+   */
+  trace(
+    input?: any,
+    opts?: StepFunction.ExecutionOptions,
+  ): AsyncGenerator<StepFunction.Transition, any, void>;
+
   /** Return the final output of the most recent execution. */
   getExecutionResult(): any;
 
   /** Pretty-print the recorded transitions with `console.table`. */
   getReport(): void;
 
-  /** Replace a Task's resource with the provided handler. */
-  bindTaskResource(task: string, fn: StepFunction.TaskResource): void;
+  /** Bind a Task's resource (by state name or Resource ARN) to a handler. */
+  bindTaskResource(task: string, fn: StepFunction.ResourceReference): void;
 }
 
 export = StepFunction;

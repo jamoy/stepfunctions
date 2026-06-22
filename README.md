@@ -120,6 +120,31 @@ await sm.startExecution('world');
 
 Must be called before `startExecution`, binds to `Tasks` and replaces their handler to the provided `Callback` parameter.
 
+The first argument may be the **state name** or the task's **Resource ARN**. The second may be a function, or a Serverless-style handler reference (`'path/to/file.exportedFn'` or `{ handler: 'path/to/file.exportedFn' }`) which is loaded and invoked — pass `handlerBasePath` to the constructor to control where those paths resolve from:
+
+```js
+const sm = new Sfn({ StateMachine, handlerBasePath: __dirname });
+sm.bindTaskResource('HelloWorld', 'handlers/hello.handler'); // runs the real handler
+```
+
+### trace(Input, Options)
+
+Run an execution and walk it generator-style, yielding each transition. The iterator's return value is the final output.
+
+```js
+for await (const step of sm.trace('world')) {
+  console.log(step.state, step.step); // e.g. 'TaskStateEntered' 'HelloWorld'
+}
+```
+
+### CLI
+
+```
+stepfunctions run definition.json --input '{"hello":"world"}' [--report]
+```
+
+Runs a state machine definition file and prints the result as JSON. Tasks without a bound/real handler pass their input through. Use `--base-path` to resolve Serverless-style handler references.
+
 ### getExecutionResult()
 
 Must be called after `startExecution`. This function returns the absolute result from the statemachine if it has finished. It is idempotent — repeated calls return the same value. (`startExecution` also resolves to this value, so you often don't need it.)
@@ -154,12 +179,7 @@ Set `QueryLanguage: "JSONata"` on the state machine or an individual state. `{% 
 
 `Assign` is supported in both JSONPath and JSONata modes. Assigned variables are referenced as `$name` in later states and follow AWS scoping: a `Map`/`Parallel` child can read outer variables but its own assignments do not leak back to the parent scope.
 
-**Experimental**
-
-- Retry
-- Catch
-
-The above features are labeled experimental because it cannot be fully spec compliant(yet) due to AWS specific cases.
+`Retry` and `Catch` are supported on `Task`, `Map` and `Parallel` (error matching, `States.ALL`, `IntervalSeconds`/`BackoffRate`/`MaxAttempts`, and `ResultPath` for the caught error). They remain best-effort for some AWS-specific error names.
 
 **Not yet supported**
 
@@ -172,18 +192,16 @@ The above features are labeled experimental because it cannot be fully spec comp
    will be used within a testing context. You can override this behaviour by adding the `respectTime` option to true in the `startExecution` method.
 2. No support for Handling `States.Permissions` as the library will not have context on AWS related permissions.
 
-## Future
+## Done
 
-PR's are welcome to help finish the ones below :)
-
-- [ ] Change arn in bindTaskResource instead of the State name
-- [ ] Run `sls invoke local` instead of binding resolvers
+- [x] Bind in `bindTaskResource` by the Resource ARN as well as the state name
+- [x] Run real handler modules (Serverless-style `file.export` refs) instead of binding resolvers
 - [x] Typescript typings
-- [ ] Run via CLI
-- [ ] Remove the "experimental" label on retry and catch
-- [ ] More accurate timing mechanism
-- [ ] use `jest.fakeTimers()` in the test
-- [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`
+- [x] Run via CLI
+- [x] Remove the "experimental" label on retry and catch
+- [x] More accurate timing mechanism
+- [x] use `jest.fakeTimers()` in the test
+- [x] Walk through states ala "generator" style (`for await (const step of sm.trace(input))`)
 - [x] Support the JSONata query language and Variables (`Assign`)
 
 ## License

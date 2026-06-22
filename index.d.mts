@@ -13,6 +13,22 @@ export interface ExecutionOptions {
 /** A bound Task handler, e.g. a Serverless/Lambda handler. */
 export type TaskResource = (input: any) => any;
 
+/**
+ * A bound resource: a handler function or a Serverless-style reference
+ * (`'path/to/file.exportedFn'` or `{ handler: 'path/to/file.exportedFn' }`).
+ */
+export type ResourceReference = TaskResource | string | { handler: string };
+
+/** A single recorded transition yielded by `trace()`. */
+export interface Transition {
+  state: string;
+  step: any;
+  input: any;
+  output: any;
+  elapsed: number;
+  [key: string]: any;
+}
+
 /** An Amazon States Language state machine definition. */
 export type StateMachine = Record<string, any>;
 
@@ -20,8 +36,10 @@ export interface Options {
   /** Friendly name for the execution. Defaults to the StateMachine `StartAt`. */
   Name?: string;
   StateMachine: StateMachine;
-  /** Map of Task state name to its handler. */
-  Resources?: Record<string, TaskResource>;
+  /** Map of Task state name (or Resource ARN) to its handler. */
+  Resources?: Record<string, ResourceReference>;
+  /** Base dir for resolving Serverless-style handler refs. Defaults to cwd. */
+  handlerBasePath?: string;
 }
 
 /**
@@ -37,14 +55,23 @@ export declare class StepFunction extends EventEmitter {
    */
   startExecution(input?: any, opts?: ExecutionOptions): Promise<any>;
 
+  /**
+   * Run an execution and walk it generator-style, yielding each transition.
+   * The iterator's return value is the final output.
+   */
+  trace(
+    input?: any,
+    opts?: ExecutionOptions,
+  ): AsyncGenerator<Transition, any, void>;
+
   /** Return the final output of the most recent execution. */
   getExecutionResult(): any;
 
   /** Pretty-print the recorded transitions with `console.table`. */
   getReport(): void;
 
-  /** Replace a Task's resource with the provided handler. */
-  bindTaskResource(task: string, fn: TaskResource): void;
+  /** Bind a Task's resource (by state name or Resource ARN) to a handler. */
+  bindTaskResource(task: string, fn: ResourceReference): void;
 }
 
 export default StepFunction;
