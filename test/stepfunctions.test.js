@@ -932,6 +932,44 @@ describe('Stepfunctions', () => {
     });
   });
 
+  describe('InputPath with Parameters', () => {
+    it('applies Parameters to the InputPath-narrowed input', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/input-parameters.json'),
+      });
+      await sm.startExecution({ inner: { a: 42 }, a: 999 });
+      expect(sm.getExecutionResult()).toEqual({ picked: 42 });
+    });
+  });
+
+  describe('Choice data-test operators on absent fields', () => {
+    it('does not match a negated Is* operator when the field is absent', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/choice-isabsent.json'),
+      });
+      const matchedFn = jest.fn((input) => input);
+      const defaultedFn = jest.fn((input) => input);
+      sm.bindTaskResource('Matched', matchedFn);
+      sm.bindTaskResource('Defaulted', defaultedFn);
+      await sm.startExecution({});
+      expect(matchedFn).not.toHaveBeenCalled();
+      expect(defaultedFn).toHaveBeenCalled();
+    });
+
+    it('matches a negated Is* operator for a present value of another type', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/choice-isabsent.json'),
+      });
+      const matchedFn = jest.fn((input) => input);
+      const defaultedFn = jest.fn((input) => input);
+      sm.bindTaskResource('Matched', matchedFn);
+      sm.bindTaskResource('Defaulted', defaultedFn);
+      await sm.startExecution({ x: 5 });
+      expect(matchedFn).toHaveBeenCalled();
+      expect(defaultedFn).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Parallel', () => {
     it('does not mutate its definition across executions', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/parallel.json') });

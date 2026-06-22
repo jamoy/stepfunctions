@@ -1,0 +1,13 @@
+{
+  "StartAt": "Narrow",
+  "States": {
+    "Narrow": {
+      "Type": "Pass",
+      "InputPath": "$.inner",
+      "Parameters": {
+        "picked.$": "$.a"
+      },
+      "End": true
+    }
+  }
+}
