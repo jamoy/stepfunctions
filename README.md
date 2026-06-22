@@ -34,20 +34,29 @@ If you are:
 
 ## Usage
 
-Include it in your test files, tested with Jest so far.
+The package ships both ESM and CommonJS entry points with TypeScript types, so use whichever you prefer:
+
+```js
+// ESM
+import Sfn from 'stepfunctions';
+// or: import { StepFunction } from 'stepfunctions';
+
+// CommonJS
+const Sfn = require('stepfunctions');
+```
+
+Include it in your test files (tested with Jest so far). You can pass a bare Amazon States Language definition straight to the constructor, and `startExecution` resolves to the final output:
 
 ```js
 const Sfn = require('stepfunctions');
 
 const sm = new Sfn({
-  StateMachine: {
-    StartAt: 'Test',
-    States: {
-      Test: {
-        Type: 'Task',
-        Resource: 'arn:aws:lambda:ap-southeast-1:123456789012:function:test',
-        End: true,
-      },
+  StartAt: 'Test',
+  States: {
+    Test: {
+      Type: 'Task',
+      Resource: 'arn:aws:lambda:ap-southeast-1:123456789012:function:test',
+      End: true,
     },
   },
 });
@@ -56,11 +65,14 @@ describe('StateMachine Test', () => {
   it('Check if a task was run', async () => {
     const mockfn = jest.fn((input) => input.test === 1);
     sm.bindTaskResource('Test', mockfn);
-    await sm.startExecution({ test: 1 });
+    const result = await sm.startExecution({ test: 1 });
     expect(mockfn).toHaveBeenCalled();
+    expect(result).toBe(true);
   });
 });
 ```
+
+The `new Sfn({ StateMachine })` form is still supported for backwards compatibility, as is calling `getExecutionResult()` after `startExecution` (it is now idempotent — it no longer consumes the result).
 
 You can see more examples in `/test/stepfunctions.test.js`.
 
@@ -68,8 +80,10 @@ You can see more examples in `/test/stepfunctions.test.js`.
 
 ### startExecution(Input, Options);
 
+Resolves to the final output of the execution.
+
 ```js
-sm.startExecution(input, {
+const output = await sm.startExecution(input, {
   respectTime: false,
   maxWaitTime: 30,
   maxConcurrency: 10,
@@ -105,7 +119,7 @@ Must be called before `startExecution`, binds to `Tasks` and replaces their hand
 
 ### getExecutionResult()
 
-Must be called after `startExecution`. This function returns the absolute result from the statemachine if it has finished.
+Must be called after `startExecution`. This function returns the absolute result from the statemachine if it has finished. It is idempotent — repeated calls return the same value. (`startExecution` also resolves to this value, so you often don't need it.)
 
 ### getReport()
 
