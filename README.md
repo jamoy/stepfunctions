@@ -8,14 +8,17 @@ AWS Step Functions implementation in Node, so you can run your Node.js lambda ha
 ## Installation
 
 ```
+pnpm add -D stepfunctions
+```
+
+or with npm / yarn:
+
+```
 npm i -D stepfunctions
-```
-
-or if you're using yarn like me:
-
-```
 yarn add -D stepfunctions
 ```
+
+> This repository itself is developed with [pnpm](https://pnpm.io) (`pnpm install`, `pnpm test`, `pnpm lint`).
 
 ## Motivation
 
