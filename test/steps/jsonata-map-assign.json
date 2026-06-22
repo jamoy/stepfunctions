@@ -1,0 +1,27 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Fan",
+  "States": {
+    "Fan": {
+      "Type": "Map",
+      "Items": "{% $states.input %}",
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "Remember",
+        "States": {
+          "Remember": {
+            "Type": "Pass",
+            "Assign": { "mine": "{% $states.input %}" },
+            "Next": "Recall"
+          },
+          "Recall": {
+            "Type": "Pass",
+            "Output": { "mine": "{% $mine %}", "item": "{% $states.input %}" },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

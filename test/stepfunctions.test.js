@@ -1179,5 +1179,21 @@ describe('Stepfunctions', () => {
       await sm.startExecution({ x: 1, y: 2 });
       expect(sm.getExecutionResult()).toEqual({ a: 1, b: 2 });
     });
+
+    it('isolates per-iteration variable scopes in a concurrent Map', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-map-assign.json'),
+      });
+      await sm.startExecution([1, 2, 3, 4, 5]);
+      // Each iteration assigns `mine` then reads it in a later state; with
+      // shared scope, concurrent iterations would clobber each other.
+      expect(sm.getExecutionResult()).toEqual([
+        { mine: 1, item: 1 },
+        { mine: 2, item: 2 },
+        { mine: 3, item: 3 },
+        { mine: 4, item: 4 },
+        { mine: 5, item: 5 },
+      ]);
+    });
   });
 });
