@@ -1,0 +1,12 @@
+{
+  "StartAt": "Bad",
+  "States": {
+    "Bad": {
+      "Type": "Pass",
+      "Parameters": {
+        "bad.$": "States.Format('{} and {}', $.only)"
+      },
+      "End": true
+    }
+  }
+}

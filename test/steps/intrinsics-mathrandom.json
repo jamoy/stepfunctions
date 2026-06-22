@@ -1,0 +1,13 @@
+{
+  "StartAt": "Random",
+  "States": {
+    "Random": {
+      "Type": "Pass",
+      "Parameters": {
+        "seeded.$": "States.MathRandom(1, 100, 42)",
+        "ranged.$": "States.MathRandom(1, 10)"
+      },
+      "End": true
+    }
+  }
+}

@@ -798,6 +798,21 @@ describe('Stepfunctions', () => {
       expect(await run({ matchStr: 'foo.log' })).toHaveBeenCalled();
     });
 
+    it('anchors StringMatches at both ends and is case-sensitive', async () => {
+      // `*` spans any run of characters, including a literal dot
+      expect(await run({ matchStr: 'foo.log.log' })).toHaveBeenCalled();
+      const fail = async (matchStr) => {
+        const sm = new Sfn({
+          StateMachine: require('./steps/choice-new.json'),
+        });
+        await expect(sm.startExecution({ matchStr })).rejects.toThrow(
+          /TaskFailed/,
+        );
+      };
+      await fail('xfoo.log'); // must start with foo
+      await fail('foo.LOG'); // case-sensitive suffix
+    });
+
     it('does not match StringMatches when suffix differs', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
       await expect(sm.startExecution({ matchStr: 'food.txt' })).rejects.toThrow(
@@ -897,6 +912,35 @@ describe('Stepfunctions', () => {
         '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
       );
       expect(result.decoded).toBe('hello');
+    });
+
+    it('evaluates MathRandom (seeded is deterministic, ranged is bounded)', async () => {
+      const definition = require('./steps/intrinsics-mathrandom.json');
+      const run = async () => {
+        const sm = new Sfn({ StateMachine: definition });
+        await sm.startExecution({});
+        return sm.getExecutionResult();
+      };
+      const a = await run();
+      const b = await run();
+      // same seed -> same value
+      expect(a.seeded).toBe(b.seeded);
+      expect(a.seeded).toBeGreaterThanOrEqual(1);
+      expect(a.seeded).toBeLessThan(100);
+      // unseeded -> within range
+      expect(a.ranged).toBeGreaterThanOrEqual(1);
+      expect(a.ranged).toBeLessThan(10);
+      expect(Number.isInteger(a.seeded)).toBe(true);
+      expect(Number.isInteger(a.ranged)).toBe(true);
+    });
+
+    it('fails when States.Format placeholders and arguments mismatch', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/intrinsics-format-error.json'),
+      });
+      await expect(sm.startExecution({ only: 'x' })).rejects.toThrow(
+        /placeholders/,
+      );
     });
   });
 
