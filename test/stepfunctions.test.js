@@ -1227,4 +1227,58 @@ describe('Stepfunctions', () => {
       );
     });
   });
+
+  describe('Catch on Parallel', () => {
+    it('catches a failed branch with a States.ALL catcher', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/parallel-catch.json'),
+      });
+      const boomFn = jest.fn(() => {
+        throw new Error('branch blew up');
+      });
+      const recoveredFn = jest.fn((input) => input);
+      sm.bindTaskResource('Boom', boomFn);
+      sm.bindTaskResource('Recovered', recoveredFn);
+      await sm.startExecution({});
+      expect(boomFn).toHaveBeenCalled();
+      expect(recoveredFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            Error: 'States.ALL',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('resources', () => {
+    it('can bind a task resource by its Resource ARN', async () => {
+      const sm = new Sfn(require('./steps/simple.json'));
+      const arn = 'arn:aws:lambda:ap-southeast-1:123456789012:function:test';
+      sm.bindTaskResource(arn, (input) => input.test === 1);
+      const result = await sm.startExecution({ test: 1 });
+      expect(result).toBe(true);
+    });
+
+    it('can run a real handler module via a Serverless-style reference', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/simple.json'),
+        handlerBasePath: __dirname,
+      });
+      sm.bindTaskResource('Test', 'handlers/echo.handler');
+      const result = await sm.startExecution({ test: 1 });
+      expect(result).toEqual({ echoed: { test: 1 } });
+    });
+
+    it('also accepts a { handler } object reference', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/simple.json'),
+        handlerBasePath: __dirname,
+      });
+      sm.bindTaskResource('Test', { handler: 'handlers/echo.handler' });
+      const result = await sm.startExecution({ test: 1 });
+      expect(result).toEqual({ echoed: { test: 1 } });
+    });
+  });
 });
