@@ -21,7 +21,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "lint": "eslint lib test index.js",
+    "lint": "eslint lib test index.js && prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky || true"
   },

@@ -12,11 +12,9 @@ module.exports = [
         ...globals.jest,
       },
     },
+    // Formatting is owned by Prettier (enforced via `prettier --check` in the
+    // lint script); ESLint only covers code quality here.
     rules: {
-      indent: ['error', 2, { SwitchCase: 1 }],
-      'linebreak-style': ['error', 'unix'],
-      quotes: ['error', 'single', { avoidEscape: true }],
-      semi: ['error', 'always'],
       'no-unused-vars': ['error', { args: 'none', varsIgnorePattern: '^_' }],
     },
   },

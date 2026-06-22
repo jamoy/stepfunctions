@@ -976,6 +976,67 @@ describe('Stepfunctions', () => {
     });
   });
 
+  describe('Map (Distributed)', () => {
+    it('limits simultaneous iterations to MaxConcurrency', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-concurrency.json'),
+      });
+      let active = 0;
+      let maxActive = 0;
+      sm.bindTaskResource('Work', async (input) => {
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        active--;
+        return input;
+      });
+      await sm.startExecution([1, 2, 3, 4, 5, 6]);
+      expect(maxActive).toBeLessThanOrEqual(2);
+      expect(sm.getExecutionResult()).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('groups items with ItemBatcher and BatchInput', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-itembatcher.json'),
+      });
+      sm.bindTaskResource('Batch', (input) => input);
+      await sm.startExecution({ items: [1, 2, 3, 4, 5], factor: 10 });
+      expect(sm.getExecutionResult()).toEqual([
+        { Items: [1, 2], BatchInput: { factor: 10 } },
+        { Items: [3, 4], BatchInput: { factor: 10 } },
+        { Items: [5], BatchInput: { factor: 10 } },
+      ]);
+    });
+
+    it('tolerates failures up to ToleratedFailureCount', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-tolerated.json'),
+      });
+      sm.bindTaskResource('MaybeFail', (input) => {
+        if (input === 2) {
+          throw new Error('boom');
+        }
+        return input;
+      });
+      await sm.startExecution([1, 2, 3]);
+      // the failed item is dropped; the rest succeed
+      expect(sm.getExecutionResult()).toEqual([1, 3]);
+    });
+
+    it('fails the Map when failures exceed the tolerance', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-tolerated.json'),
+      });
+      sm.bindTaskResource('MaybeFail', (input) => {
+        if (input >= 2) {
+          throw new Error('boom');
+        }
+        return input;
+      });
+      await expect(sm.startExecution([1, 2, 3])).rejects.toThrow();
+    });
+  });
+
   describe('InputPath with Parameters', () => {
     it('applies Parameters to the InputPath-narrowed input', async () => {
       const sm = new Sfn({
