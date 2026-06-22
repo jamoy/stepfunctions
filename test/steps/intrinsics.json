@@ -1,0 +1,27 @@
+{
+  "StartAt": "Intrinsics",
+  "States": {
+    "Intrinsics": {
+      "Type": "Pass",
+      "Parameters": {
+        "formatted.$": "States.Format('Hello, {}! You are {}.', $.name, $.age)",
+        "escaped.$": "States.Format('a\\{b\\} {}', $.name)",
+        "arr.$": "States.Array($.age, 1, 'literal, with comma', true, null)",
+        "len.$": "States.ArrayLength($.items)",
+        "first.$": "States.ArrayGetItem($.items, 0)",
+        "sum.$": "States.MathAdd($.age, 10)",
+        "nested.$": "States.ArrayGetItem(States.Array($.age, States.MathAdd($.age, 1)), 1)",
+        "range.$": "States.ArrayRange(1, 9, 2)",
+        "partition.$": "States.ArrayPartition($.items, 2)",
+        "contains.$": "States.ArrayContains($.items, 2)",
+        "unique.$": "States.ArrayUnique($.dups)",
+        "split.$": "States.StringSplit($.csv, ',')",
+        "b64.$": "States.Base64Encode('hello')",
+        "json.$": "States.JsonToString($.obj)",
+        "parsed.$": "States.StringToJson($.jsonStr)",
+        "merged.$": "States.JsonMerge($.j1, $.j2, false)"
+      },
+      "End": true
+    }
+  }
+}

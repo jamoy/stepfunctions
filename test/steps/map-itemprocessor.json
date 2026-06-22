@@ -1,0 +1,30 @@
+{
+  "StartAt": "Map",
+  "States": {
+    "Map": {
+      "Type": "Map",
+      "ItemsPath": "$.items",
+      "ItemSelector": {
+        "value.$": "$.v",
+        "index.$": "$$.Map.Item.Index"
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Double",
+        "States": {
+          "Double": {
+            "Type": "Pass",
+            "Parameters": {
+              "result.$": "States.MathAdd($.value, $.value)",
+              "idx.$": "$.index"
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

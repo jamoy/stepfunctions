@@ -783,4 +783,164 @@ describe('Stepfunctions', () => {
       }),
     );
   });
+
+  describe('Choice (newer operators)', () => {
+    const run = async (input) => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      const mockFn = jest.fn((value) => value);
+      sm.bindTaskResource('Test', mockFn);
+      await sm.startExecution(input);
+      return mockFn;
+    };
+
+    it('matches with StringMatches wildcards', async () => {
+      expect(await run({ matchStr: 'foobar.log' })).toHaveBeenCalled();
+      expect(await run({ matchStr: 'foo.log' })).toHaveBeenCalled();
+    });
+
+    it('does not match StringMatches when suffix differs', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ matchStr: 'food.txt' })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+
+    it('treats an escaped asterisk as a literal in StringMatches', async () => {
+      expect(await run({ lit: 'a*b' })).toHaveBeenCalled();
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ lit: 'axb' })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+
+    it('matches IsPresent for a present (even falsy) value', async () => {
+      expect(await run({ maybePresent: 0 })).toHaveBeenCalled();
+    });
+
+    it('matches IsNull only when the value is null', async () => {
+      expect(await run({ nullable: null })).toHaveBeenCalled();
+    });
+
+    it('matches IsNumeric, IsString, IsBoolean type checks', async () => {
+      expect(await run({ num: 42 })).toHaveBeenCalled();
+      expect(await run({ str: 'hello' })).toHaveBeenCalled();
+      expect(await run({ bool: false })).toHaveBeenCalled();
+    });
+
+    it('matches IsTimestamp for an RFC3339 timestamp', async () => {
+      expect(await run({ ts: '2020-01-01T00:00:00Z' })).toHaveBeenCalled();
+    });
+
+    it('compares against another path with NumericGreaterThanPath', async () => {
+      expect(await run({ a: 5, b: 3 })).toHaveBeenCalled();
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ a: 2, b: 3 })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+
+    it('compares against another path with StringEqualsPath', async () => {
+      expect(await run({ x: 'hi', y: 'hi' })).toHaveBeenCalled();
+      const sm = new Sfn({ StateMachine: require('./steps/choice-new.json') });
+      await expect(sm.startExecution({ x: 'hi', y: 'bye' })).rejects.toThrow(
+        /TaskFailed/,
+      );
+    });
+  });
+
+  describe('Intrinsic functions', () => {
+    it('evaluates intrinsics inside Parameters', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/intrinsics.json') });
+      await sm.startExecution({
+        name: 'Sam',
+        age: 5,
+        items: [1, 2, 3],
+        dups: [1, 1, 2, 3, 3],
+        csv: 'a,b,c',
+        obj: { x: 1 },
+        jsonStr: '{"y":2}',
+        j1: { a: 1 },
+        j2: { b: 2 },
+      });
+      expect(sm.getExecutionResult()).toEqual(
+        expect.objectContaining({
+          formatted: 'Hello, Sam! You are 5.',
+          escaped: 'a{b} Sam',
+          arr: [5, 1, 'literal, with comma', true, null],
+          len: 3,
+          first: 1,
+          sum: 15,
+          nested: 6,
+          range: [1, 3, 5, 7, 9],
+          partition: [[1, 2], [3]],
+          contains: true,
+          unique: [1, 2, 3],
+          split: ['a', 'b', 'c'],
+          b64: 'aGVsbG8=',
+          json: '{"x":1}',
+          parsed: { y: 2 },
+          merged: { a: 1, b: 2 },
+        }),
+      );
+    });
+
+    it('evaluates UUID, Hash and Base64Decode', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/intrinsics-uuid-hash.json'),
+      });
+      await sm.startExecution({});
+      const result = sm.getExecutionResult();
+      expect(result.uuid).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+      expect(result.hash).toBe(
+        '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+      );
+      expect(result.decoded).toBe('hello');
+    });
+  });
+
+  describe('ResultSelector', () => {
+    it('transforms a task result before ResultPath', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/result-selector.json'),
+      });
+      const mockFn = jest.fn(() => ({
+        Payload: { status: 'OK', items: [1, 2, 3] },
+        Meta: { requestId: 'abc-123' },
+      }));
+      sm.bindTaskResource('Select', mockFn);
+      await sm.startExecution({ orderId: 'o-1' });
+      expect(sm.getExecutionResult()).toEqual({
+        orderId: 'o-1',
+        result: { status: 'OK', count: 3 },
+      });
+    });
+  });
+
+  describe('Map (ItemProcessor / ItemSelector)', () => {
+    it('supports ItemProcessor and ItemSelector aliases', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/map-itemprocessor.json'),
+      });
+      await sm.startExecution({ items: [{ v: 1 }, { v: 2 }, { v: 3 }] });
+      expect(sm.getExecutionResult()).toEqual([
+        { result: 2, idx: 0 },
+        { result: 4, idx: 1 },
+        { result: 6, idx: 2 },
+      ]);
+    });
+  });
+
+  describe('Parallel', () => {
+    it('does not mutate its definition across executions', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/parallel.json') });
+      sm.bindTaskResource('ParallelTask1', (input) => input[0] + input[1]);
+      sm.bindTaskResource('ParallelTask2', (input) => input[0] - input[1]);
+      await sm.startExecution([1, 1]);
+      expect(sm.getExecutionResult()).toEqual(expect.arrayContaining([2, 0]));
+      await sm.startExecution([1, 1]);
+      expect(sm.getExecutionResult()).toEqual(expect.arrayContaining([2, 0]));
+    });
+  });
 });

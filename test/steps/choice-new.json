@@ -1,0 +1,69 @@
+{
+  "StartAt": "Choices",
+  "States": {
+    "Choices": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.matchStr",
+          "StringMatches": "foo*.log",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.lit",
+          "StringMatches": "a\\*b",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.maybePresent",
+          "IsPresent": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.nullable",
+          "IsNull": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.num",
+          "IsNumeric": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.str",
+          "IsString": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.bool",
+          "IsBoolean": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.ts",
+          "IsTimestamp": true,
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.a",
+          "NumericGreaterThanPath": "$.b",
+          "Next": "Test"
+        },
+        {
+          "Variable": "$.x",
+          "StringEqualsPath": "$.y",
+          "Next": "Test"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Test": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:123456789012:function:test",
+      "End": true
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}
