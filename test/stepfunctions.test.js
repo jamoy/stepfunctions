@@ -313,64 +313,8 @@ describe('Stepfunctions', () => {
     });
   });
 
-  describe('Wait', () => {
-    // Fake timers keep these instant and deterministic instead of really
-    // sleeping. A fixed clock (after the past Timestamp in wait.json) lets the
-    // Timestamp branch resolve once we advance past the target time.
-    beforeEach(() => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2020-06-01T00:00:00Z'));
-    });
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('can wait for 1 second', async () => {
-      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
-      const mockFn = jest.fn();
-      sm.bindTaskResource('Final', mockFn);
-      const execution = sm.startExecution({ value: 'Wait' });
-      await jest.advanceTimersByTimeAsync(1000);
-      await execution;
-      expect(mockFn).toHaveBeenCalled();
-    });
-
-    it('can wait for 1 second using SecondsPath', async () => {
-      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
-      const mockFn = jest.fn();
-      sm.bindTaskResource('Final', mockFn);
-      const execution = sm.startExecution({ value: 'WaitPath', until: 1 });
-      await jest.advanceTimersByTimeAsync(1000);
-      await execution;
-      expect(mockFn).toHaveBeenCalled();
-    });
-
-    it('can wait until a specified time', async () => {
-      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
-      const mockFn = jest.fn();
-      sm.bindTaskResource('Final', mockFn);
-      const execution = sm.startExecution({ value: 'WaitUntil' });
-      // wait.json's Timestamp is in the past, so the first interval tick fires
-      await jest.advanceTimersByTimeAsync(500);
-      await execution;
-      expect(mockFn).toHaveBeenCalled();
-    });
-
-    it('can wait until a specified time using TimestampPath', async () => {
-      const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
-      const mockFn = jest.fn();
-      sm.bindTaskResource('Final', mockFn);
-      const until = new Date('2020-06-01T00:00:01Z').getTime(); // 1s ahead
-      const execution = sm.startExecution({ value: 'WaitUntilPath', until });
-      await jest.advanceTimersByTimeAsync(1000);
-      await execution;
-      expect(mockFn).toHaveBeenCalled();
-    });
-
-    it.skip('can abort a running statemachine', () => {});
-
-    it.skip('can expect a timeout when a wait step is running for a long time', () => {});
-  });
+  // The Wait tests live in test/wait.test.js (they use jest fake timers, which
+  // are isolated per test file so the timer globals don't leak into this file).
 
   describe('Choice', () => {
     it('can test against boolean', async () => {
