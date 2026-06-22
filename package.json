@@ -6,6 +6,9 @@
   "main": "index.js",
   "module": "index.mjs",
   "types": "index.d.ts",
+  "bin": {
+    "stepfunctions": "bin/cli.js"
+  },
   "exports": {
     ".": {
       "import": {
@@ -29,6 +32,7 @@
   },
   "files": [
     "lib",
+    "bin",
     "LICENSE",
     "index.js",
     "index.mjs",
@@ -39,7 +43,7 @@
   "scripts": {
     "test": "jest",
     "test:smoke": "node test/smoke.mjs",
-    "lint": "eslint lib test index.js index.mjs && prettier --check .",
+    "lint": "eslint lib test bin index.js index.mjs && prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky || true"
   },

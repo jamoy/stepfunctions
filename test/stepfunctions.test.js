@@ -313,29 +313,46 @@ describe('Stepfunctions', () => {
     });
   });
 
-  // TODO: maybe use jest.fakeTimers
   describe('Wait', () => {
+    // Fake timers keep these instant and deterministic instead of really
+    // sleeping. A fixed clock (after the past Timestamp in wait.json) lets the
+    // Timestamp branch resolve once we advance past the target time.
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2020-06-01T00:00:00Z'));
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it('can wait for 1 second', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
       const mockFn = jest.fn();
       sm.bindTaskResource('Final', mockFn);
-      await sm.startExecution({ value: 'Wait' });
+      const execution = sm.startExecution({ value: 'Wait' });
+      await jest.advanceTimersByTimeAsync(1000);
+      await execution;
       expect(mockFn).toHaveBeenCalled();
-    }, 1500);
+    });
 
     it('can wait for 1 second using SecondsPath', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
       const mockFn = jest.fn();
       sm.bindTaskResource('Final', mockFn);
-      await sm.startExecution({ value: 'WaitPath', until: 1 });
+      const execution = sm.startExecution({ value: 'WaitPath', until: 1 });
+      await jest.advanceTimersByTimeAsync(1000);
+      await execution;
       expect(mockFn).toHaveBeenCalled();
-    }, 1500);
+    });
 
     it('can wait until a specified time', async () => {
       const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
       const mockFn = jest.fn();
       sm.bindTaskResource('Final', mockFn);
-      await sm.startExecution({ value: 'WaitUntil' });
+      const execution = sm.startExecution({ value: 'WaitUntil' });
+      // wait.json's Timestamp is in the past, so the first interval tick fires
+      await jest.advanceTimersByTimeAsync(500);
+      await execution;
       expect(mockFn).toHaveBeenCalled();
     });
 
@@ -343,14 +360,12 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/wait.json') });
       const mockFn = jest.fn();
       sm.bindTaskResource('Final', mockFn);
-      // 1 second in the future
-      const date = new Date();
-      await sm.startExecution({
-        value: 'WaitUntilPath',
-        until: date.setSeconds(date.getSeconds() + 1),
-      });
+      const until = new Date('2020-06-01T00:00:01Z').getTime(); // 1s ahead
+      const execution = sm.startExecution({ value: 'WaitUntilPath', until });
+      await jest.advanceTimersByTimeAsync(1000);
+      await execution;
       expect(mockFn).toHaveBeenCalled();
-    }, 2000);
+    });
 
     it.skip('can abort a running statemachine', () => {});
 
@@ -1279,6 +1294,70 @@ describe('Stepfunctions', () => {
       sm.bindTaskResource('Test', { handler: 'handlers/echo.handler' });
       const result = await sm.startExecution({ test: 1 });
       expect(result).toEqual({ echoed: { test: 1 } });
+    });
+  });
+
+  describe('trace (generator-style stepping)', () => {
+    it('yields each transition and returns the final result', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/tasks.json') });
+      sm.bindTaskResource('Test', (i) => ({ test: i.test + 1 }));
+      sm.bindTaskResource('Test1', (i) => ({ test: i.test + 2 }));
+      sm.bindTaskResource('Test2', (i) => i.test + 3);
+
+      const iterator = sm.trace({ test: 1 });
+      const labels = [];
+      let next = await iterator.next();
+      while (!next.done) {
+        labels.push(next.value.state);
+        next = await iterator.next();
+      }
+
+      expect(labels[0]).toBe('ExecutionStarted');
+      expect(labels).toEqual(
+        expect.arrayContaining(['TaskStateEntered', 'TaskStateExited']),
+      );
+      expect(labels[labels.length - 1]).toBe('ExecutionSucceeded');
+      // the generator's return value is the final execution output
+      expect(next.value).toBe(7);
+    });
+
+    it('can be consumed with for-await', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/simple.json') });
+      sm.bindTaskResource('Test', (input) => input.test === 1);
+      const states = [];
+      for await (const step of sm.trace({ test: 1 })) {
+        states.push(step.state);
+      }
+      expect(states).toContain('LambdaFunctionSucceeded');
+      expect(sm.getExecutionResult()).toBe(true);
+    });
+  });
+
+  describe('CLI', () => {
+    const { execFileSync } = require('child_process');
+    const root = require('path').resolve(__dirname, '..');
+
+    it('runs a state machine definition and prints the result', () => {
+      const out = execFileSync(
+        'node',
+        [
+          'bin/cli.js',
+          'run',
+          'test/steps/simple.json',
+          '--input',
+          '{"test":1}',
+        ],
+        { encoding: 'utf8', cwd: root },
+      );
+      expect(JSON.parse(out)).toEqual({ test: 1 });
+    });
+
+    it('prints usage with --help', () => {
+      const out = execFileSync('node', ['bin/cli.js', '--help'], {
+        encoding: 'utf8',
+        cwd: root,
+      });
+      expect(out).toMatch(/Usage: stepfunctions run/);
     });
   });
 });
