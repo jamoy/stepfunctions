@@ -127,7 +127,15 @@ The spec implemented in https://states-language.net/spec.html is supported by th
 - **Intrinsic functions** inside `Parameters`, `ItemSelector` and `ResultSelector` payload templates: `States.Format`, `States.StringToJson`, `States.JsonToString`, `States.Array`, `States.ArrayPartition`, `States.ArrayContains`, `States.ArrayRange`, `States.ArrayGetItem`, `States.ArrayLength`, `States.ArrayUnique`, `States.Base64Encode`, `States.Base64Decode`, `States.Hash`, `States.JsonMerge`, `States.MathRandom`, `States.MathAdd`, `States.StringSplit` and `States.UUID` (including nested calls).
 - **`Choice` operators** `StringMatches`, `IsNull`, `IsPresent`, `IsBoolean`, `IsNumeric`, `IsString`, `IsTimestamp`, and all the `*Path` comparison variants (e.g. `NumericGreaterThanPath`, `StringEqualsPath`).
 - **`ResultSelector`** on `Task`, `Map` and `Parallel` (applied before `ResultPath` and `OutputPath`).
-- **`Map`** accepts `ItemProcessor`/`ItemSelector` as aliases of `Iterator`/`Parameters`.
+- **`Map`** accepts `ItemProcessor`/`ItemSelector` as aliases of `Iterator`/`Parameters`, and honours `MaxConcurrency`, `ItemBatcher` (`MaxItemsPerBatch`, `BatchInput`) and the `ToleratedFailureCount`/`ToleratedFailurePercentage` thresholds.
+
+### JSONata (Nov 2024)
+
+Set `QueryLanguage: "JSONata"` on the state machine or an individual state. `{% … %}` expressions are evaluated with [`jsonata`](https://www.npmjs.com/package/jsonata), with the `$states` object (`$states.input`, `$states.result`, `$states.context`) and any assigned variables bound. Supported on `Pass` (`Output`), `Task` (`Arguments`, `Output`), `Choice` (`Condition`), `Map` (`Items`, `ItemSelector`, `Output`) and `Parallel` (`Output`).
+
+### Variables (Nov 2024)
+
+`Assign` is supported in both JSONPath and JSONata modes. Assigned variables are referenced as `$name` in later states and follow AWS scoping: a `Map`/`Parallel` child can read outer variables but its own assignments do not leak back to the parent scope.
 
 **Experimental**
 
@@ -138,9 +146,8 @@ The above features are labeled experimental because it cannot be fully spec comp
 
 **Not yet supported**
 
-- The JSONata query language (`QueryLanguage: "JSONata"`, `Arguments`, `Output`).
-- Variables (`Assign` / `$var` references).
-- Distributed `Map` (`ItemReader`, `ResultWriter`); `ItemProcessor` runs inline.
+- JSONata on `Wait`/`Succeed`/`Fail`, and the `$states.errorOutput` binding inside a `Catch`.
+- Distributed `Map` infrastructure (`ItemReader`, `ResultWriter`); `ItemProcessor` always runs inline.
 
 ## Caveats
 
@@ -160,7 +167,7 @@ PR's are welcome to help finish the ones below :)
 - [ ] More accurate timing mechanism
 - [ ] use `jest.fakeTimers()` in the test
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`
-- [ ] Support the JSONata query language and Variables (`Assign`)
+- [x] Support the JSONata query language and Variables (`Assign`)
 
 ## License
 

@@ -1,0 +1,21 @@
+{
+  "StartAt": "Store",
+  "States": {
+    "Store": {
+      "Type": "Pass",
+      "Assign": {
+        "greeting.$": "States.Format('Hello {}', $.name)",
+        "count.$": "$.n"
+      },
+      "Next": "Use"
+    },
+    "Use": {
+      "Type": "Pass",
+      "Parameters": {
+        "msg.$": "$greeting",
+        "doubled.$": "States.MathAdd($count, $count)"
+      },
+      "End": true
+    }
+  }
+}

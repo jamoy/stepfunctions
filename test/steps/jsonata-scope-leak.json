@@ -1,0 +1,28 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Fan",
+  "States": {
+    "Fan": {
+      "Type": "Map",
+      "Items": "{% [1, 2] %}",
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "Tag",
+        "States": {
+          "Tag": {
+            "Type": "Pass",
+            "Assign": { "childOnly": "{% 'x' %}" },
+            "Output": { "id": "{% $states.input %}" },
+            "End": true
+          }
+        }
+      },
+      "Next": "After"
+    },
+    "After": {
+      "Type": "Pass",
+      "Output": { "leaked": "{% $childOnly %}" },
+      "End": true
+    }
+  }
+}

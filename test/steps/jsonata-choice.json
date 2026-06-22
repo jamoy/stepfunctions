@@ -1,0 +1,15 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Check",
+  "States": {
+    "Check": {
+      "Type": "Choice",
+      "Choices": [
+        { "Condition": "{% $states.input.age >= 18 %}", "Next": "Adult" }
+      ],
+      "Default": "Minor"
+    },
+    "Adult": { "Type": "Pass", "Output": { "status": "adult" }, "End": true },
+    "Minor": { "Type": "Pass", "Output": { "status": "minor" }, "End": true }
+  }
+}

@@ -1086,4 +1086,98 @@ describe('Stepfunctions', () => {
       expect(sm.getExecutionResult()).toEqual(expect.arrayContaining([2, 0]));
     });
   });
+
+  describe('Variables (Assign)', () => {
+    it('assigns variables and references them in a later state (JSONPath)', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/assign-jsonpath.json'),
+      });
+      await sm.startExecution({ name: 'Ada', n: 5 });
+      expect(sm.getExecutionResult()).toEqual({
+        msg: 'Hello Ada',
+        doubled: 10,
+      });
+    });
+  });
+
+  describe('JSONata', () => {
+    it('evaluates a Pass Output expression', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-pass.json'),
+      });
+      await sm.startExecution({ a: 2, b: 3 });
+      expect(sm.getExecutionResult()).toEqual({ sum: 5 });
+    });
+
+    it('passes Arguments to a Task and shapes Output', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-task.json'),
+      });
+      const mockFn = jest.fn((args) => {
+        expect(args).toEqual({ sku: 'A1' });
+        return { price: 9.99 };
+      });
+      sm.bindTaskResource('Price', mockFn);
+      await sm.startExecution({ sku: 'A1' });
+      expect(mockFn).toHaveBeenCalled();
+      expect(sm.getExecutionResult()).toEqual({ price: 9.99, sku: 'A1' });
+    });
+
+    it('evaluates a Choice Condition', async () => {
+      const adult = new Sfn({
+        StateMachine: require('./steps/jsonata-choice.json'),
+      });
+      await adult.startExecution({ age: 20 });
+      expect(adult.getExecutionResult()).toEqual({ status: 'adult' });
+
+      const minor = new Sfn({
+        StateMachine: require('./steps/jsonata-choice.json'),
+      });
+      await minor.startExecution({ age: 10 });
+      expect(minor.getExecutionResult()).toEqual({ status: 'minor' });
+    });
+
+    it('maps items with Items, ItemProcessor and Output expressions', async () => {
+      const sm = new Sfn({ StateMachine: require('./steps/jsonata-map.json') });
+      await sm.startExecution({
+        items: [
+          { name: 'Widget', price: 5, quantity: 3 },
+          { name: 'Gadget', price: 12, quantity: 2 },
+        ],
+      });
+      expect(sm.getExecutionResult()).toEqual([
+        { name: 'Widget', total: 15 },
+        { name: 'Gadget', total: 24 },
+      ]);
+    });
+
+    it('lets a Map child read an outer variable', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-scope.json'),
+      });
+      await sm.startExecution({ ids: [1, 2] });
+      expect(sm.getExecutionResult()).toEqual({
+        results: [
+          { id: 1, region: 'EU' },
+          { id: 2, region: 'EU' },
+        ],
+        regionStillVisible: 'EU',
+      });
+    });
+
+    it('does not leak a child-assigned variable to the parent scope', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-scope-leak.json'),
+      });
+      await expect(sm.startExecution({})).rejects.toThrow();
+    });
+
+    it('merges Parallel branch results via an Output expression', async () => {
+      const sm = new Sfn({
+        StateMachine: require('./steps/jsonata-parallel.json'),
+      });
+      await sm.startExecution({ x: 1, y: 2 });
+      expect(sm.getExecutionResult()).toEqual({ a: 1, b: 2 });
+    });
+  });
 });

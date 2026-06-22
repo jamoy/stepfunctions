@@ -1,0 +1,33 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Both",
+  "States": {
+    "Both": {
+      "Type": "Parallel",
+      "Output": "{% $merge($states.result) %}",
+      "Branches": [
+        {
+          "StartAt": "A",
+          "States": {
+            "A": {
+              "Type": "Pass",
+              "Output": { "a": "{% $states.input.x %}" },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "B",
+          "States": {
+            "B": {
+              "Type": "Pass",
+              "Output": { "b": "{% $states.input.y %}" },
+              "End": true
+            }
+          }
+        }
+      ],
+      "End": true
+    }
+  }
+}
