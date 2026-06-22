@@ -3,8 +3,8 @@ name: Stepfunctions
 on:
   push:
     branches: [master]
+  # Run on every pull request, including ones stacked on feature branches.
   pull_request:
-    branches: [master]
 
 jobs:
   build:
@@ -15,13 +15,17 @@ jobs:
         node-version: [20.x, 24.x, 26.x]
     steps:
       - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
-      - run: npm run lint
-      - run: npm test
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm test:smoke
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:

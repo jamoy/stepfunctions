@@ -2,8 +2,23 @@
   "name": "stepfunctions",
   "description": "AWS Step Functions implementation in Node, so you can run your Node.js lambda handlers in your test environments. Made to support Serverless JS testing.",
   "version": "0.2.0",
+  "packageManager": "pnpm@10.33.0",
   "main": "index.js",
+  "module": "index.mjs",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./index.d.mts",
+        "default": "./index.mjs"
+      },
+      "require": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,12 +31,15 @@
     "lib",
     "LICENSE",
     "index.js",
+    "index.mjs",
     "index.d.ts",
+    "index.d.mts",
     "package.json"
   ],
   "scripts": {
     "test": "jest",
-    "lint": "eslint lib test index.js && prettier --check .",
+    "test:smoke": "node test/smoke.mjs",
+    "lint": "eslint lib test index.js index.mjs && prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky || true"
   },
@@ -39,6 +57,15 @@
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3"
   },
+  "pnpm": {
+    "overrides": {
+      "underscore": "^1.13.8",
+      "js-yaml": "^4.2.0"
+    },
+    "ignoredBuiltDependencies": [
+      "unrs-resolver"
+    ]
+  },
   "peerDependencies": {
     "serverless": ">=1.74.1"
   },
@@ -48,7 +75,7 @@
     }
   },
   "lint-staged": {
-    "*.js": [
+    "*.{js,mjs}": [
       "eslint --fix",
       "prettier --write"
     ]

@@ -18,4 +18,10 @@ module.exports = [
       'no-unused-vars': ['error', { args: 'none', varsIgnorePattern: '^_' }],
     },
   },
+  {
+    files: ['**/*.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+    },
+  },
 ];
