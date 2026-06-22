@@ -2,9 +2,8 @@ const Sfn = require('../lib/stepfunctions');
 
 describe('Stepfunctions', () => {
   it('validates states definition via asl-validator', async () => {
-    const message = 'data should NOT have additional properties';
     expect(() => new Sfn({ StateMachine: { willThrow: true } })).toThrow(
-      message,
+      /required property 'StartAt'/,
     );
   });
 
@@ -285,7 +284,7 @@ describe('Stepfunctions', () => {
       const sm = new Sfn({ StateMachine: require('./steps/fail.json') });
       const mockFn = jest.fn();
       sm.on('FailStateEntered', mockFn);
-      await expect(sm.startExecution()).rejects.toThrowError(/TaskFailed/);
+      await expect(sm.startExecution()).rejects.toThrow(/TaskFailed/);
       expect(mockFn).toHaveBeenCalled();
     });
   });
@@ -308,7 +307,7 @@ describe('Stepfunctions', () => {
       const mockFn = jest.fn();
       sm.bindTaskResource('Test', succeedingFn);
       sm.on('FailStateEntered', mockFn);
-      await expect(sm.startExecution()).rejects.toThrowError(/TaskFailed/);
+      await expect(sm.startExecution()).rejects.toThrow(/TaskFailed/);
       expect(mockFn).toHaveBeenCalled();
       expect(succeedingFn).toHaveBeenCalled();
     });

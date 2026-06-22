@@ -1,51 +1,55 @@
 {
   "name": "stepfunctions",
   "description": "AWS Step Functions implementation in Node, so you can run your Node.js lambda handlers in your test environments. Made to support Serverless JS testing.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "index.js",
+  "types": "index.d.ts",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/jamoy/stepfunctions.git"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "files": [
     "lib",
     "LICENSE",
     "index.js",
+    "index.d.ts",
     "package.json"
   ],
   "scripts": {
     "test": "jest",
-    "lint": "eslint --fix"
+    "lint": "eslint lib test index.js",
+    "format": "prettier --write .",
+    "prepare": "husky || true"
   },
   "dependencies": {
-    "asl-validator": "^1.7.0",
-    "jsonpath": "^1.0.2"
+    "asl-validator": "^4.0.0",
+    "jsonpath": "^1.1.1"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.8",
-    "babel-eslint": "^10.1.0",
-    "codecov": "^3.7.2",
-    "eslint": "^7.4.0",
-    "husky": "^4.2.5",
-    "jest-cli": "^26.1.0",
-    "lint-staged": "^10.2.11",
-    "prettier": "^2.0.5",
-    "pretty-quick": "^2.0.1",
-    "ts-jest": "^26.1.4",
-    "typescript": "^3.9.7"
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
+    "husky": "^9.1.6",
+    "jest": "^30.0.0",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3"
   },
   "peerDependencies": {
-    "serverless": "^1.74.1"
+    "serverless": ">=1.74.1"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && pretty-quick --staged"
+  "peerDependenciesMeta": {
+    "serverless": {
+      "optional": true
     }
   },
   "lint-staged": {
     "*.js": [
-      "eslint --fix"
+      "eslint --fix",
+      "prettier --write"
     ]
   },
   "keywords": [
