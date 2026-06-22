@@ -116,9 +116,18 @@ Use `console.table` to list down the transitions that occured.
 `abort` is made available within the replaced Task handlers made with `bindTaskResource`. this allows you to abort a call
 from within a handler itself.
 
+## Requirements
+
+Node.js `>= 20`. The library is tested on Node 20, 24, and 26.
+
 ## Support
 
-The spec implemented in https://states-language.net/spec.html is fully supported by this library besides the ones below:
+The spec implemented in https://states-language.net/spec.html is supported by this library, including the newer (post-2020) JSONPath additions:
+
+- **Intrinsic functions** inside `Parameters`, `ItemSelector` and `ResultSelector` payload templates: `States.Format`, `States.StringToJson`, `States.JsonToString`, `States.Array`, `States.ArrayPartition`, `States.ArrayContains`, `States.ArrayRange`, `States.ArrayGetItem`, `States.ArrayLength`, `States.ArrayUnique`, `States.Base64Encode`, `States.Base64Decode`, `States.Hash`, `States.JsonMerge`, `States.MathRandom`, `States.MathAdd`, `States.StringSplit` and `States.UUID` (including nested calls).
+- **`Choice` operators** `StringMatches`, `IsNull`, `IsPresent`, `IsBoolean`, `IsNumeric`, `IsString`, `IsTimestamp`, and all the `*Path` comparison variants (e.g. `NumericGreaterThanPath`, `StringEqualsPath`).
+- **`ResultSelector`** on `Task`, `Map` and `Parallel` (applied before `ResultPath` and `OutputPath`).
+- **`Map`** accepts `ItemProcessor`/`ItemSelector` as aliases of `Iterator`/`Parameters`.
 
 **Experimental**
 
@@ -126,6 +135,12 @@ The spec implemented in https://states-language.net/spec.html is fully supported
 - Catch
 
 The above features are labeled experimental because it cannot be fully spec compliant(yet) due to AWS specific cases.
+
+**Not yet supported**
+
+- The JSONata query language (`QueryLanguage: "JSONata"`, `Arguments`, `Output`).
+- Variables (`Assign` / `$var` references).
+- Distributed `Map` (`ItemReader`, `ResultWriter`); `ItemProcessor` runs inline.
 
 ## Caveats
 
@@ -139,12 +154,13 @@ PR's are welcome to help finish the ones below :)
 
 - [ ] Change arn in bindTaskResource instead of the State name
 - [ ] Run `sls invoke local` instead of binding resolvers
-- [ ] Typescript typings
+- [x] Typescript typings
 - [ ] Run via CLI
 - [ ] Remove the "experimental" label on retry and catch
 - [ ] More accurate timing mechanism
 - [ ] use `jest.fakeTimers()` in the test
 - [ ] Walk through states ala "generator" style. e.g, `yield sm.next()`
+- [ ] Support the JSONata query language and Variables (`Assign`)
 
 ## License
 
